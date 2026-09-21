@@ -1,0 +1,12 @@
+const express = require('express');
+const { body, param, query } = require('express-validator');
+const c = require('../controllers/barberController');
+const { authentifier, autoriser } = require('../middlewares/auth');
+const { valider } = require('../middlewares/validation');
+const routeur = express.Router();
+const service = [body('name').trim().isLength({ min: 2, max: 100 }), body('description').optional({ nullable: true }).isString(), body('price').isFloat({ gt: 0 }), body('duration').isInt({ min: 5, max: 480 }), valider];
+routeur.get('/', [query('latitude').optional().isFloat({ min: -90, max: 90 }), query('longitude').optional().isFloat({ min: -180, max: 180 }), valider], c.lister);
+routeur.get('/:id/available-slots', [param('id').isInt({ min: 1 }), query('date').isISO8601(), query('serviceId').isInt({ min: 1 }), valider], c.creneauxDisponibles);
+routeur.get('/:id', [param('id').isInt({ min: 1 }), valider], c.detail);
+routeur.post('/:id/services', authentifier, autoriser('barber'), [param('id').isInt({ min: 1 }), ...service], c.ajouterService);
+module.exports = routeur;
