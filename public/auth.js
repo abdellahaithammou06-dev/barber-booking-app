@@ -1,7 +1,13 @@
 const form = document.querySelector('#login-form, #register-form');
 const message = document.querySelector('#auth-message');
 
-if (localStorage.getItem('accessToken')) window.location.replace('/');
+function destinationFor(user) {
+  return user?.role === 'barber' ? '/espace-barbier.html' : '/#recherche';
+}
+
+if (localStorage.getItem('accessToken')) {
+  try { window.location.replace(destinationFor(JSON.parse(localStorage.getItem('user')))); } catch { window.location.replace('/'); }
+}
 
 form?.addEventListener('submit', async (event) => {
   event.preventDefault();
@@ -20,7 +26,7 @@ form?.addEventListener('submit', async (event) => {
     if (!response.ok) throw new Error(data.message || 'Une erreur est survenue.');
     localStorage.setItem('accessToken', data.accessToken);
     localStorage.setItem('user', JSON.stringify(data.utilisateur));
-    window.location.assign('/');
+    window.location.assign(destinationFor(data.utilisateur));
   } catch (error) {
     message.textContent = error.message;
     button.disabled = false;

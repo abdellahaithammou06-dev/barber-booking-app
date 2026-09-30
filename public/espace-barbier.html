@@ -1,3 +1,89 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Espace barbier — Barber Booking</title><link rel="stylesheet" href="/styles.css"><script defer src="/page.js"></script></head>
-<body><header><a href="/" class="brand">Barber Booking</a><nav><a href="/#recherche">Trouver un barbier</a><a href="/mes-reservations.html">Mes réservations</a><a href="/espace-barbier.html">Espace barbier</a><a href="/administration.html">Administration</a></nav><div class="auth-actions" aria-label="Compte"><a id="login-link" class="button button-secondary" href="/connexion.html">Connexion</a><a id="register-link" class="button" href="/creer-un-compte.html">Créer un compte</a><button id="logout" hidden>Déconnexion</button></div></header><main><section class="page-intro"><p class="eyebrow">ESPACE PROFESSIONNEL</p><h1>Espace barbier</h1><p>Gérez vos services, vos disponibilités et les réservations de votre salon depuis cet espace.</p><a class="button" href="/">Retour à l'accueil</a></section></main><footer>© Barber Booking — réservation locale, sans paiement en ligne.</footer></body></html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Espace barbier — Barber Booking</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/maps.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script defer src="/page.js"></script>
+</head>
+<body data-page-access="barber">
+  <header>
+    <a href="/espace-barbier.html" class="brand">Barber Booking</a>
+    <nav>
+      <a data-role-link="client" href="/#recherche">Trouver un barbier</a>
+      <a data-role-link="client" href="/mes-reservations.html">Mes réservations</a>
+      <a data-role-link="barber" href="/espace-barbier.html">Espace barbier</a>
+      <a data-role-link="admin" href="/administration.html">Administration</a>
+    </nav>
+    <div class="auth-actions" aria-label="Compte">
+      <a id="login-link" class="button button-secondary" href="/connexion.html">Connexion</a>
+      <a id="register-link" class="button" href="/creer-un-compte.html">Créer un compte</a>
+      <button id="logout" hidden>Déconnexion</button>
+    </div>
+  </header>
+  <main>
+    <section class="page-intro">
+      <p class="eyebrow">ESPACE PROFESSIONNEL</p>
+      <h1>Votre salon, en un seul endroit.</h1>
+      <p>Présentez votre établissement, définissez vos prestations et suivez vos rendez-vous.</p>
+      <a class="button" href="#services">Gérer mes prestations</a>
+    </section>
+    <section class="dashboard-grid">
+      <div class="panel">
+        <h2>Profil du salon</h2>
+        <p class="hint">Ces informations seront visibles par les clients.</p>
+        <form id="profile-form" class="stack-form">
+          <label>Nom du salon<input name="shopName" required maxlength="150"></label>
+          <label>Adresse<input name="address" maxlength="255" placeholder="Ville, rue, quartier"></label>
+          <label>Téléphone<input name="phone" maxlength="20" type="tel"></label>
+          <label>À propos<textarea name="description" rows="4" maxlength="2000" placeholder="Présentez votre salon et votre expérience"></textarea></label>
+          <div class="location-picker-field">
+            <div><strong>Emplacement du salon</strong><p class="hint">Cliquez sur la carte ou déplacez le marqueur pour placer votre salon.</p></div>
+            <div id="location-picker" aria-label="Carte de sélection de l’emplacement du salon"></div>
+            <p id="location-message" class="hint" aria-live="polite">Aucun emplacement sélectionné.</p>
+            <input name="latitude" type="hidden">
+            <input name="longitude" type="hidden">
+          </div>
+          <button>Enregistrer le profil</button>
+          <p class="form-message" id="profile-message" aria-live="polite"></p>
+        </form>
+      </div>
+      <div class="panel" id="services">
+        <h2>Vos prestations</h2>
+        <p class="hint">Choisissez dans le catalogue puis définissez votre tarif et la durée.</p>
+        <form id="service-form" class="stack-form">
+          <label>Prestation<select name="serviceId" required></select></label>
+          <div class="two-fields">
+            <label>Prix (MAD)<input name="price" type="number" min="1" step="0.01" required></label>
+            <label>Durée (minutes)<input name="durationMinutes" type="number" min="5" max="480" step="5" value="30" required></label>
+          </div>
+          <button>Ajouter ou mettre à jour</button>
+          <p id="service-message" class="form-message" aria-live="polite"></p>
+        </form>
+        <div id="service-list" class="service-list"></div>
+      </div>
+      <div class="panel schedule-panel">
+        <h2>Horaires d’ouverture</h2>
+        <p class="hint">Les clients pourront réserver pendant ces horaires.</p>
+        <form id="hours-form" class="hours-form">
+          <div id="hours-fields"></div>
+          <button>Enregistrer les horaires</button>
+          <p id="hours-message" class="form-message" aria-live="polite"></p>
+        </form>
+      </div>
+    </section>
+    <section>
+      <div class="section-heading">
+        <div><p class="eyebrow">AGENDA</p><h2>Rendez-vous clients</h2></div>
+        <button class="button button-secondary" id="refresh-appointments" type="button">Actualiser</button>
+      </div>
+      <div id="barber-appointment-list"></div>
+    </section>
+  </main>
+  <footer>© Barber Booking — une réservation simple, un service soigné.</footer>
+</body>
+</html>

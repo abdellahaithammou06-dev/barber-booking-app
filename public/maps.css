@@ -1,0 +1,22 @@
+#map,
+#location-picker {
+  position: relative;
+  z-index: 0;
+  isolation: isolate;
+  min-height: 320px;
+  height: 320px;
+  border: 1px solid var(--soft);
+  border-radius: .7rem;
+  overflow: hidden;
+}
+
+header { z-index: 1000; }
+
+.location-picker-field {
+  display: grid;
+  gap: .7rem;
+}
+
+.location-picker-field p {
+  margin: .1rem 0;
+}

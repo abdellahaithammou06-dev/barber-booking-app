@@ -35,12 +35,27 @@ CREATE TABLE barber_photos (
 
 CREATE TABLE services (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(100) NOT NULL UNIQUE,
+  description TEXT
+);
+
+INSERT INTO services (name, description) VALUES
+  ('Coupe classique', 'Coupe et finition soignée.'),
+  ('Dégradé', 'Dégradé personnalisé avec contours nets.'),
+  ('Taille de barbe', 'Taille, contours et soin de la barbe.'),
+  ('Coupe et barbe', 'Coupe de cheveux et taille de barbe.'),
+  ('Rasage traditionnel', 'Rasage au coupe-chou avec serviette chaude.')
+ON DUPLICATE KEY UPDATE description = VALUES(description);
+
+-- Une prestation est un catalogue partagé. Le tarif et la durée dépendent du barbier.
+CREATE TABLE barber_services (
   barber_id INT NOT NULL,
-  name VARCHAR(100) NOT NULL,
-  description TEXT,
+  service_id INT NOT NULL,
   price DECIMAL(8, 2) NOT NULL,
-  duration INT NOT NULL COMMENT 'durée en minutes',
-  FOREIGN KEY (barber_id) REFERENCES barbers(id) ON DELETE CASCADE
+  duration_minutes INT NOT NULL DEFAULT 30,
+  PRIMARY KEY (barber_id, service_id),
+  FOREIGN KEY (barber_id) REFERENCES barbers(id) ON DELETE CASCADE,
+  FOREIGN KEY (service_id) REFERENCES services(id) ON DELETE CASCADE
 );
 
 CREATE TABLE working_hours (
@@ -67,6 +82,8 @@ CREATE TABLE appointments (
   client_id INT NOT NULL,
   barber_id INT NOT NULL,
   service_id INT NOT NULL,
+  price_at_booking DECIMAL(8, 2) NOT NULL,
+  duration_minutes INT NOT NULL,
   date DATE NOT NULL,
   time TIME NOT NULL,
   status ENUM(
@@ -95,6 +112,8 @@ CREATE TABLE reviews (
   FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE SET NULL
 );
 
+CREATE UNIQUE INDEX uq_reviews_appointment ON reviews (appointment_id);
+
 CREATE TABLE notifications (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
@@ -110,3 +129,4 @@ CREATE INDEX idx_barbers_location ON barbers (latitude, longitude);
 CREATE INDEX idx_appointments_barber_date ON appointments (barber_id, date);
 CREATE INDEX idx_appointments_client ON appointments (client_id);
 CREATE INDEX idx_reviews_barber ON reviews (barber_id);
+CREATE INDEX idx_barber_services_service ON barber_services (service_id);

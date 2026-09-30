@@ -1,11 +1,9 @@
 const { pool } = require('../config/database');
 async function creer(req, res, next) {
-  const { barberId, appointmentId = null, rating, comment = null } = req.body;
+  const { barberId, appointmentId, rating, comment = null } = req.body;
   try {
-    if (appointmentId) {
-      const [[rdv]] = await pool.execute("SELECT id FROM appointments WHERE id = ? AND client_id = ? AND barber_id = ? AND status = 'completed'", [appointmentId, req.utilisateur.id, barberId]);
-      if (!rdv) return res.status(422).json({ message: 'Seul un rendez-vous terminé peut être évalué.' });
-    }
+    const [[rdv]] = await pool.execute("SELECT id FROM appointments WHERE id = ? AND client_id = ? AND barber_id = ? AND status = 'completed'", [appointmentId, req.utilisateur.id, barberId]);
+    if (!rdv) return res.status(422).json({ message: 'Seul un rendez-vous terminé peut être évalué.' });
     const [resultat] = await pool.execute('INSERT INTO reviews (client_id, barber_id, appointment_id, rating, comment) VALUES (?, ?, ?, ?, ?)', [req.utilisateur.id, barberId, appointmentId, rating, comment]);
     return res.status(201).json({ id: resultat.insertId, barber_id: barberId, rating, comment });
   } catch (erreur) { return next(erreur); }

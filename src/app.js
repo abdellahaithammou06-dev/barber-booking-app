@@ -2,7 +2,6 @@ const express = require('express');
 const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 const barberRoutes = require('./routes/barberRoutes');
-const serviceRoutes = require('./routes/serviceRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const adminRoutes = require('./routes/adminRoutes');
@@ -25,7 +24,6 @@ app.get('/api/health', (req, res) => {
 app.use('/auth', authRoutes);
 app.use('/barbers', barberRoutes);
 app.get('/barbers/:id/reviews', [param('id').isInt({ min: 1 }), valider], listerAvis);
-app.use('/services', serviceRoutes);
 app.use('/appointments', appointmentRoutes);
 app.use('/reviews', reviewRoutes);
 app.use('/admin', adminRoutes);
