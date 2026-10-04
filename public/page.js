@@ -10,6 +10,73 @@ else if (requiredRole && role !== requiredRole) window.location.replace(roleHome
 const $ = (selector) => document.querySelector(selector);
 const escapeHtml = (value) => { const node = document.createElement('span'); node.textContent = value ?? ''; return node.innerHTML; };
 const formatDate = (value) => value instanceof Date ? value.toISOString().slice(0, 10) : String(value || '').slice(0, 10);
+const chatPanel = $('#appointment-chat');
+const chatLauncher = $('#chat-launcher');
+let chatAppointment = null;
+let chatOpenedFor = null;
+function appointmentInstant(appointment) {
+  const date = formatDate(appointment.date);
+  const utcGuess = Date.parse(`${date}T${String(appointment.time).slice(0, 5)}:00Z`);
+  const parts = new Intl.DateTimeFormat('en-GB', { timeZone: 'Africa/Casablanca', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit', hourCycle: 'h23' }).formatToParts(new Date(utcGuess));
+  const value = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return utcGuess - (Date.UTC(Number(value.year), Number(value.month) - 1, Number(value.day), Number(value.hour), Number(value.minute), Number(value.second)) - utcGuess);
+}
+function addChatMessage(message, fromClient = false) {
+  const node = document.createElement('p');
+  node.className = `chat-message${fromClient ? ' is-client' : ''}`;
+  node.textContent = message;
+  $('#chat-messages')?.append(node);
+  $('#chat-messages')?.scrollTo(0, $('#chat-messages').scrollHeight);
+}
+function chatOptions(options) {
+  const replies = $('#chat-replies');
+  if (!replies) return;
+  replies.innerHTML = options.map((option, index) => `<button type="button" class="${index ? 'button-secondary' : ''}" data-chat-option="${index}">${escapeHtml(option)}</button>`).join('');
+}
+function openAppointmentChat(appointment, automatic = false) {
+  if (!chatPanel) return;
+  chatAppointment = appointment;
+  chatPanel.hidden = false;
+  chatLauncher.hidden = true;
+  if (chatOpenedFor !== String(appointment.id)) {
+    chatOpenedFor = String(appointment.id);
+    $('#chat-messages').replaceChildren();
+    const heure = String(appointment.time).slice(0, 5);
+    addChatMessage(automatic
+      ? `Bonjour ! C’est l’heure de votre rendez-vous au salon ${appointment.shop_name}. Votre prestation : ${appointment.service_name}, à ${heure}. Puis-je vous aider ?`
+      : `Bonjour ! Je peux vous aider avec votre rendez-vous chez ${appointment.shop_name}.`);
+    chatOptions(['Voir l’adresse', 'Voir les détails', 'Tout va bien']);
+  }
+}
+if (chatLauncher) chatLauncher.hidden = false;
+chatLauncher?.addEventListener('click', () => {
+  const next = window.currentAppointments?.find((appointment) => appointment.status === 'confirmed');
+  if (next) openAppointmentChat(next);
+  else {
+    chatPanel.hidden = false;
+    chatLauncher.hidden = true;
+    addChatMessage('Bonjour ! Je suis votre assistant rendez-vous. Un rappel apparaîtra ici à l’heure de votre prochain rendez-vous confirmé.');
+    chatOptions(['Compris']);
+  }
+});
+$('.chat-close')?.addEventListener('click', () => { chatPanel.hidden = true; chatLauncher.hidden = false; });
+$('#chat-replies')?.addEventListener('click', (event) => {
+  const button = event.target.closest('[data-chat-option]');
+  if (!button) return;
+  const choice = button.textContent;
+  addChatMessage(choice, true);
+  if (choice === 'Voir l’adresse') {
+    addChatMessage(chatAppointment?.shop_address || 'L’adresse du salon n’a pas été renseignée. Consultez le profil du barbier pour ses coordonnées.');
+    if (chatAppointment?.shop_phone) addChatMessage(`Téléphone : ${chatAppointment.shop_phone}`);
+    chatOptions(['Voir les détails', 'Merci']);
+  } else if (choice === 'Voir les détails') {
+    addChatMessage(`${chatAppointment?.service_name || 'Rendez-vous'} · ${formatDate(chatAppointment?.date)} à ${String(chatAppointment?.time || '').slice(0, 5)} · ${chatAppointment?.status || ''}.`);
+    chatOptions(['Voir l’adresse', 'Merci']);
+  } else {
+    addChatMessage('Parfait. Bon rendez-vous et à bientôt !');
+    chatOptions([]);
+  }
+});
 let locationMap;
 let locationMarker;
 async function api(url, options = {}) {
@@ -71,6 +138,15 @@ async function loadAppointments() {
   if (!list) return;
   try {
     const appointments = await api('/appointments/me');
+    window.currentAppointments = appointments;
+    const now = Date.now();
+    const due = appointments.find((appointment) => appointment.status === 'confirmed'
+      && now >= appointmentInstant(appointment) && now < appointmentInstant(appointment) + 2 * 60 * 1000
+      && sessionStorage.getItem(`appointment-reminder-${appointment.id}`) !== 'shown');
+    if (due) {
+      sessionStorage.setItem(`appointment-reminder-${due.id}`, 'shown');
+      openAppointmentChat(due, true);
+    }
     const visibleAppointments = appointments.filter((appointment) =>
       !['cancelled_by_client', 'cancelled_by_barber'].includes(appointment.status));
     list.innerHTML = visibleAppointments.length ? visibleAppointments.map((a) => {
@@ -195,6 +271,7 @@ async function adminDashboard() {
 }
 
 $('#refresh-appointments')?.addEventListener('click', loadAppointments);
+if ($('#appointment-chat')) window.setInterval(loadAppointments, 15000);
 
 if ($('#profile-form')) barberDashboard();
 else if ($('#admin-users')) adminDashboard();

@@ -5,6 +5,7 @@ const barberRoutes = require('./routes/barberRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const adminRoutes = require('./routes/adminRoutes');
+const whatsappRoutes = require('./routes/whatsappRoutes');
 const { lister: listerAvis } = require('./controllers/reviewController');
 const { param } = require('express-validator');
 const { valider } = require('./middlewares/validation');
@@ -13,7 +14,10 @@ const app = express();
 
 // Les futurs contrôleurs reçoivent ici les corps JSON des requêtes API.
 app.use(cors());
-app.use(express.json({ limit: '100kb' }));
+app.use(express.json({
+  limit: '100kb',
+  verify(req, res, buffer) { req.rawBody = Buffer.from(buffer); },
+}));
 app.use(express.static('public'));
 
 // Point de contrôle sans accès à la base, pratique pour vérifier le serveur.
@@ -27,6 +31,7 @@ app.get('/barbers/:id/reviews', [param('id').isInt({ min: 1 }), valider], lister
 app.use('/appointments', appointmentRoutes);
 app.use('/reviews', reviewRoutes);
 app.use('/admin', adminRoutes);
+app.use('/webhooks/whatsapp', whatsappRoutes);
 
 // Réponse homogène pour les routes qui seront ajoutées progressivement.
 app.use((req, res) => {

@@ -7,9 +7,11 @@ CREATE TABLE users (
   name VARCHAR(100) NOT NULL,
   email VARCHAR(150) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
+  google_sub VARCHAR(255) NULL,
   role ENUM('client', 'barber', 'admin') NOT NULL DEFAULT 'client',
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
-  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_users_google_sub (google_sub)
 );
 
 CREATE TABLE barbers (
@@ -86,6 +88,8 @@ CREATE TABLE appointments (
   duration_minutes INT NOT NULL,
   date DATE NOT NULL,
   time TIME NOT NULL,
+  client_phone VARCHAR(16) NULL,
+  whatsapp_opt_in BOOLEAN NOT NULL DEFAULT FALSE,
   status ENUM(
     'pending', 'confirmed', 'cancelled_by_client',
     'cancelled_by_barber', 'completed', 'no_show'
@@ -117,11 +121,14 @@ CREATE UNIQUE INDEX uq_reviews_appointment ON reviews (appointment_id);
 CREATE TABLE notifications (
   id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
+  appointment_id INT NULL,
   type ENUM('confirmation', 'reminder', 'cancellation') NOT NULL,
-  channel ENUM('email', 'sms') NOT NULL DEFAULT 'email',
+  channel ENUM('email', 'sms', 'whatsapp') NOT NULL DEFAULT 'whatsapp',
   sent_at TIMESTAMP NULL,
-  status ENUM('pending', 'sent', 'failed') NOT NULL DEFAULT 'pending',
-  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+  status ENUM('pending', 'sending', 'sent', 'failed') NOT NULL DEFAULT 'pending',
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+  FOREIGN KEY (appointment_id) REFERENCES appointments(id) ON DELETE CASCADE,
+  UNIQUE KEY uq_notifications_appointment_type_channel (appointment_id, type, channel)
 );
 
 -- Index utiles pour les recherches fréquentes

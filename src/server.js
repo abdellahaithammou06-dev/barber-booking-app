@@ -3,6 +3,7 @@ require('dotenv').config();
 const app = require('./app');
 const { verifierConnexionBDD } = require('./config/database');
 const { verifierSecretsJWT } = require('./config/tokens');
+const { demarrerRappelsRendezVous } = require('./services/appointmentReminderService');
 
 const port = Number(process.env.PORT || 3000);
 
@@ -13,6 +14,7 @@ const port = Number(process.env.PORT || 3000);
 async function demarrerServeur() {
   verifierSecretsJWT();
   await verifierConnexionBDD();
+  demarrerRappelsRendezVous();
 
   app.listen(port, () => {
     console.log(`API Barber Booking disponible sur le port ${port}.`);

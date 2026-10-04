@@ -1,5 +1,6 @@
 const { pool } = require('../config/database');
 const { monBarbier } = require('./barberController');
+const { normaliserNumeroWhatsApp } = require('../utils/phone');
 
 function minutes(heure) { const [h, m] = heure.slice(0, 5).split(':').map(Number); return h * 60 + m; }
 function heureLocaleMaroc() {
@@ -18,6 +19,9 @@ function instantMaroc(date, time) {
 
 async function creer(req, res, next) {
   const { barberId, serviceId, date, time } = req.body;
+  const whatsappOptIn = req.body.whatsappOptIn === true;
+  const clientPhone = whatsappOptIn ? normaliserNumeroWhatsApp(req.body.clientPhone) : null;
+  if (whatsappOptIn && !clientPhone) return res.status(422).json({ message: 'Saisissez un numéro WhatsApp valide pour recevoir le rappel.' });
   const connexion = await pool.getConnection();
   try {
     await connexion.beginTransaction();
@@ -40,9 +44,9 @@ async function creer(req, res, next) {
     const [existants] = await connexion.execute("SELECT time, duration_minutes FROM appointments WHERE barber_id = ? AND date = ? AND status IN ('pending', 'confirmed') FOR UPDATE", [barberId, date]);
     const conflit = existants.some((rdv) => demande < minutes(rdv.time) + rdv.duration_minutes && demande + service.duration_minutes > minutes(rdv.time));
     if (conflit) { await connexion.rollback(); return res.status(409).json({ message: 'Ce créneau vient d’être réservé.' }); }
-    const [resultat] = await connexion.execute('INSERT INTO appointments (client_id, barber_id, service_id, price_at_booking, duration_minutes, date, time) VALUES (?, ?, ?, ?, ?, ?, ?)', [req.utilisateur.id, barberId, serviceId, service.price, service.duration_minutes, date, time]);
+    const [resultat] = await connexion.execute('INSERT INTO appointments (client_id, barber_id, service_id, price_at_booking, duration_minutes, date, time, client_phone, whatsapp_opt_in) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)', [req.utilisateur.id, barberId, serviceId, service.price, service.duration_minutes, date, time, clientPhone, whatsappOptIn]);
     await connexion.commit();
-    return res.status(201).json({ id: resultat.insertId, client_id: req.utilisateur.id, barber_id: barberId, service_id: serviceId, price_at_booking: service.price, duration_minutes: service.duration_minutes, date, time, status: 'pending' });
+    return res.status(201).json({ id: resultat.insertId, client_id: req.utilisateur.id, barber_id: barberId, service_id: serviceId, price_at_booking: service.price, duration_minutes: service.duration_minutes, date, time, status: 'pending', client_phone: clientPhone, whatsapp_opt_in: whatsappOptIn });
   } catch (erreur) { await connexion.rollback(); return next(erreur); } finally { connexion.release(); }
 }
 
@@ -51,7 +55,7 @@ async function miens(req, res, next) {
     const barbier = req.utilisateur.role === 'barber' ? await monBarbier(req.utilisateur.id) : null;
     const sql = barbier
       ? "SELECT a.*, u.name AS client_name, s.name AS service_name FROM appointments a JOIN users u ON u.id = a.client_id JOIN services s ON s.id = a.service_id WHERE a.barber_id = ? AND a.status NOT IN ('cancelled_by_client', 'cancelled_by_barber') AND NOT EXISTS (SELECT 1 FROM reviews r WHERE r.appointment_id = a.id) ORDER BY a.date DESC, a.time DESC"
-      : "SELECT a.*, b.shop_name, s.name AS service_name FROM appointments a JOIN barbers b ON b.id = a.barber_id JOIN services s ON s.id = a.service_id WHERE a.client_id = ? AND a.status NOT IN ('cancelled_by_client', 'cancelled_by_barber') AND NOT EXISTS (SELECT 1 FROM reviews r WHERE r.appointment_id = a.id) ORDER BY a.date DESC, a.time DESC";
+      : "SELECT a.*, b.shop_name, b.address AS shop_address, b.phone AS shop_phone, s.name AS service_name FROM appointments a JOIN barbers b ON b.id = a.barber_id JOIN services s ON s.id = a.service_id WHERE a.client_id = ? AND a.status NOT IN ('cancelled_by_client', 'cancelled_by_barber') AND NOT EXISTS (SELECT 1 FROM reviews r WHERE r.appointment_id = a.id) ORDER BY a.date DESC, a.time DESC";
     const [lignes] = await pool.execute(sql, [barbier ? barbier.id : req.utilisateur.id]);
     return res.json(lignes);
   } catch (erreur) { return next(erreur); }
