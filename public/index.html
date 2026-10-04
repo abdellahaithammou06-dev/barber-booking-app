@@ -1,7 +1,70 @@
 <!doctype html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Barber Booking</title><link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/maps.css"><link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"><script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script><script defer src="/app.js"></script></head>
-<body data-page-access="client"><header><a href="#accueil" class="brand">Barber Booking</a><nav><a data-role-link="client" href="#recherche">Trouver un barbier</a><a data-role-link="client" href="/mes-reservations.html">Mes réservations</a><a data-role-link="barber" href="/espace-barbier.html">Espace barbier</a><a data-role-link="admin" href="/administration.html">Administration</a></nav><div class="auth-actions" aria-label="Compte"><a id="login-link" class="button button-secondary" href="/connexion.html">Connexion</a><a id="register-link" class="button" href="/creer-un-compte.html">Créer un compte</a><button id="logout" hidden>Déconnexion</button></div></header><main>
-<section id="accueil" class="hero"><div class="hero-copy"><p class="eyebrow">BARBIERS PRÈS DE CHEZ VOUS</p><h1>Votre prochain rendez-vous commence ici.</h1><p>Découvrez les salons, comparez les prestations et choisissez le créneau qui vous convient.</p><div class="hero-note"><span aria-hidden="true">✓</span> Réservation simple, sans paiement en ligne</div></div><form id="search-form" class="search-panel"><div><p class="eyebrow">TROUVEZ VOTRE BARBIER</p><h2>Qu’est-ce qui vous ferait plaisir&nbsp;?</h2></div><label>Ville ou nom du salon<input name="q" placeholder="Ex. Inzegane, Casablanca"></label><label>Prestation<input name="service" placeholder="Ex. coupe, dégradé, barbe"></label><button>Rechercher les salons <span aria-hidden="true">→</span></button><p class="search-hint">Suggestions : <button class="text-chip" type="button" data-search-service="Coupe">Coupe</button><button class="text-chip" type="button" data-search-service="Barbe">Barbe</button><button class="text-chip" type="button" data-search-service="Dégradé">Dégradé</button></p></form></section>
-<section id="recherche" class="results-section"><div class="section-heading"><div><p class="eyebrow">UNE BONNE ADRESSE, TOUT PRÈS</p><h2>Salons disponibles</h2></div><a class="professional-link" href="/creer-un-compte.html">Vous êtes barbier ? <span>Rejoindre Barber Booking →</span></a></div><div id="barber-results" class="cards" aria-live="polite"><p class="empty-search">Lancez une recherche pour découvrir les barbiers disponibles.</p></div></section>
-<section id="profil" hidden><button class="button-secondary back" type="button">← Retour aux résultats</button><div id="barber-profile"></div><div id="map" aria-label="Carte du salon"></div><h3>Choisissez votre rendez-vous</h3><form id="booking-form" class="grid-form"><label>Prestation<select name="serviceId" required></select></label><label>Date<input type="date" name="date" required></label><label>Horaire<select name="time" required><option value="">Choisir d’abord la date</option></select></label><label>Téléphone WhatsApp<input type="tel" name="clientPhone" autocomplete="tel" placeholder="+212 6 12 34 56 78" maxlength="30"></label><label class="whatsapp-opt-in"><input type="checkbox" name="whatsappOptIn">Recevoir un rappel du rendez-vous sur WhatsApp</label><button>Réserver</button></form><p class="whatsapp-note">Le numéro est demandé uniquement si vous choisissez de recevoir le rappel WhatsApp.</p><p id="booking-message" aria-live="polite"></p><h3>Avis clients</h3><div id="reviews" class="cards"></div></section>
-</main><footer>© Barber Booking — réservation locale, sans paiement en ligne.</footer></body></html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#090910">
+  <meta name="description" content="Trouve un barbier près de chez toi et réserve ton prochain rendez-vous en ligne.">
+  <title>Barber Booking — Trouve ton prochain barber</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/theme.css">
+  <link rel="stylesheet" href="/home.css">
+  <link rel="stylesheet" href="/maps.css">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script defer src="/app.js"></script>
+</head>
+<body class="home-theme" data-page-access="client">
+  <header class="home-header">
+    <a href="#accueil" class="brand" aria-label="Barber Booking, accueil">Barber <span>Booking</span></a>
+    <nav aria-label="Navigation principale">
+      <a data-role-link="client" href="#recherche">Trouver un barbier</a>
+      <a data-role-link="client" href="/mes-reservations.html">Mes réservations</a>
+      <a data-role-link="barber" href="/espace-barbier.html">Espace barbier</a>
+      <a data-role-link="admin" href="/administration.html">Administration</a>
+      <a href="/contact-client.html">Contact</a>
+    </nav>
+    <div class="auth-actions" aria-label="Compte">
+      <a id="login-link" class="button button-secondary" href="/connexion.html">Connexion</a>
+      <a id="register-link" class="button" href="/creer-un-compte.html">Créer un compte</a>
+      <button id="logout" hidden>Déconnexion</button>
+    </div>
+  </header>
+  <main class="home-main">
+    <section id="accueil" class="hero">
+      <div class="hero-glow" aria-hidden="true"></div>
+      <div class="hero-art" aria-hidden="true"><div class="hero-art-ring"></div><div class="hero-art-pole"><span></span><span></span><span></span></div><div class="hero-art-scissor">✂</div></div>
+      <div class="hero-content">
+        <p class="eyebrow"><span class="eyebrow-dot"></span> LE RENDEZ-VOUS QUI CHANGE TOUT</p>
+        <h1>Ta prochaine coupe<br><span>commence ici.</span></h1>
+        <p class="hero-subtitle">Trouve le bon barbier près de chez toi, choisis ta prestation et réserve ton créneau en quelques clics.</p>
+        <div class="hero-highlights" aria-label="Avantages">
+          <span><i aria-hidden="true">✦</i> Salons près de chez toi</span>
+          <span><i aria-hidden="true">✦</i> Créneaux disponibles</span>
+          <span><i aria-hidden="true">✦</i> Rappel WhatsApp au choix</span>
+        </div>
+      </div>
+      <form id="search-form" class="search-panel">
+        <div class="search-panel-heading"><span class="search-icon" aria-hidden="true">⌕</span><div><p class="eyebrow">À TOI DE JOUER</p><h2>Trouve ton prochain barber</h2></div></div>
+        <div class="search-fields">
+          <label><span>Ville ou salon</span><input name="q" placeholder="Ex. Casablanca, Maarif" autocomplete="off"></label>
+          <label><span>Prestation</span><input name="service" placeholder="Coupe, barbe, dégradé" autocomplete="off"></label>
+          <button class="search-submit">Rechercher <span aria-hidden="true">↗</span></button>
+        </div>
+        <div class="search-suggestions"><span>Populaires :</span><button class="text-chip" type="button" data-search-service="Coupe">Coupe</button><button class="text-chip" type="button" data-search-service="Barbe">Barbe</button><button class="text-chip" type="button" data-search-service="Dégradé">Dégradé</button></div>
+      </form>
+      <a class="hero-scroll" href="#recherche"><span class="scroll-mark" aria-hidden="true">↓</span> Explorer les salons</a>
+    </section>
+
+    <section id="recherche" class="results-section">
+      <div class="section-heading"><div><p class="eyebrow">LE STYLE EST À DEUX PAS</p><h2>Choisis ta ville.<br><span>On trouve le barber.</span></h2></div><a class="professional-link" href="/creer-un-compte.html?role=barber"><span class="pro-kicker">TU ES BARBIER ?</span><strong>Fais découvrir ton salon <span aria-hidden="true">↗</span></strong></a></div>
+      <div class="city-shortcuts" aria-label="Rechercher par ville"><span class="city-label">Explorer par ville</span><button type="button" data-search-city="Casablanca">Casablanca <span>↗</span></button><button type="button" data-search-city="Rabat">Rabat <span>↗</span></button><button type="button" data-search-city="Marrakech">Marrakech <span>↗</span></button><button type="button" data-search-city="Tanger">Tanger <span>↗</span></button></div>
+      <div class="results-heading"><p>BARBIERS DISPONIBLES</p><span>Les adresses à découvrir</span></div>
+      <div id="barber-results" class="cards" aria-live="polite"><p class="empty-search">Lance une recherche pour découvrir les barbiers disponibles.</p></div>
+    </section>
+
+    <section id="profil" class="profile-section" hidden><button class="button-secondary back" type="button">← Retour aux résultats</button><div id="barber-profile"></div><div id="map" aria-label="Carte du salon"></div><h3>Choisis ton rendez-vous</h3><form id="booking-form" class="grid-form"><label>Prestation<select name="serviceId" required></select></label><label>Date<input type="date" name="date" required></label><label>Horaire<select name="time" required><option value="">Choisir d’abord la date</option></select></label><label>Téléphone WhatsApp<input type="tel" name="clientPhone" autocomplete="tel" placeholder="+212 6 12 34 56 78" maxlength="30"></label><label class="whatsapp-opt-in"><input type="checkbox" name="whatsappOptIn">Recevoir un rappel du rendez-vous sur WhatsApp</label><button>Réserver</button></form><p class="whatsapp-note">Le numéro est demandé uniquement si tu choisis le rappel WhatsApp.</p><p id="booking-message" aria-live="polite"></p><h3>Avis clients</h3><div id="reviews" class="cards"></div></section>
+  </main>
+  <footer class="home-footer"><a href="#accueil" class="brand">Barber <span>Booking</span></a><p>Le bon barber, au bon moment.</p><span>© Barber Booking</span></footer>
+</body>
+</html>

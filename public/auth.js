@@ -1,6 +1,23 @@
 const form = document.querySelector('#login-form, #register-form');
 const message = document.querySelector('#auth-message');
 const googleButton = document.querySelector('#google-signin');
+const requestedRole = new URLSearchParams(window.location.search).get('role');
+
+if (form?.id === 'register-form' && ['client', 'barber'].includes(requestedRole)) {
+  form.elements.role.value = requestedRole;
+}
+
+if (form?.id === 'register-form') {
+  const updateRegisterIntro = () => {
+    const isBarber = form.elements.role.value === 'barber';
+    document.querySelector('.auth-card h1').textContent = isBarber ? 'Créer un compte barbier' : 'Créer un compte';
+    document.querySelector('.auth-card > p:not(.eyebrow):not(.auth-switch)').textContent = isBarber
+      ? 'Présentez votre salon et gérez vos rendez-vous sur Barber Booking.'
+      : 'Inscrivez-vous pour réserver votre prochain rendez-vous.';
+  };
+  form.elements.role.addEventListener('change', updateRegisterIntro);
+  updateRegisterIntro();
+}
 
 function destinationFor(user) {
   return user?.role === 'barber' ? '/espace-barbier.html' : '/#recherche';
@@ -13,7 +30,16 @@ function ouvrirSession(data) {
 }
 
 if (localStorage.getItem('accessToken')) {
-  try { window.location.replace(destinationFor(JSON.parse(localStorage.getItem('user')))); } catch { window.location.replace('/'); }
+  try {
+    const currentUser = JSON.parse(localStorage.getItem('user'));
+    const creatingBarberAccount = form?.id === 'register-form' && requestedRole === 'barber';
+    const clientCreatingSeparateBarberAccount = creatingBarberAccount && currentUser?.role === 'client';
+    if (clientCreatingSeparateBarberAccount) {
+      message.textContent = 'Vous êtes déjà connecté avec un compte client. Pour créer un compte barbier distinct, utilisez une autre adresse e-mail. Votre session client restera active jusqu’à la création du nouveau compte.';
+    } else {
+      window.location.replace(destinationFor(currentUser));
+    }
+  } catch { window.location.replace('/'); }
 }
 
 form?.addEventListener('submit', async (event) => {

@@ -25,6 +25,11 @@ app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
 
+// L'adresse de contact est publique par nature, contrairement aux identifiants SMTP.
+app.get('/api/public-config', (req, res) => {
+  res.status(200).json({ contactEmail: process.env.CONTACT_EMAIL || 'abdellahaithammou06@gmail.com' });
+});
+
 app.use('/auth', authRoutes);
 app.use('/barbers', barberRoutes);
 app.get('/barbers/:id/reviews', [param('id').isInt({ min: 1 }), valider], listerAvis);

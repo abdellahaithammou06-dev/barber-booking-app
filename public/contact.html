@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#090910">
+  <meta name="description" content="Choisissez la page de contact qui correspond à votre profil sur Barber Booking.">
+  <title>Contact — Barber Booking</title>
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/theme.css">
+  <link rel="stylesheet" href="/contact.css">
+  <script defer src="/contact-auth.js"></script>
+</head>
+<body class="contact-page">
+  <header>
+    <a href="/" class="brand">Barber Booking</a>
+    <nav aria-label="Navigation principale"><a href="/#recherche">Trouver un barbier</a><a href="/contact.html" aria-current="page">Contact</a></nav>
+    <div class="auth-actions" aria-label="Compte"><a id="login-link" class="button button-secondary" href="/connexion.html">Connexion</a><a id="register-link" class="button" href="/creer-un-compte.html">Créer un compte</a><button id="logout" type="button" hidden>Déconnexion</button></div>
+  </header>
+  <main class="contact-main contact-hub">
+    <section class="contact-hero">
+      <p class="eyebrow"><span aria-hidden="true">✦</span> ON EST À VOTRE ÉCOUTE</p>
+      <h1>Comment peut-on<br><span>vous aider ?</span></h1>
+      <p>Choisissez la page qui correspond à votre profil. Vous y trouverez un formulaire adapté à votre demande.</p>
+      <div class="contact-audience" aria-label="Choisir votre profil">
+        <a class="audience-card" href="/contact-client.html"><span class="audience-icon" aria-hidden="true">✂</span><span><strong>Je suis client</strong><small>Réservation, compte ou rendez-vous</small></span><span class="audience-arrow" aria-hidden="true">↗</span></a>
+        <a class="audience-card" href="/contact-barbier.html"><span class="audience-icon" aria-hidden="true">◈</span><span><strong>Je suis barbier</strong><small>Salon, profil ou gestion des rendez-vous</small></span><span class="audience-arrow" aria-hidden="true">↗</span></a>
+      </div>
+    </section>
+  </main>
+  <footer class="contact-footer"><a href="/" class="brand">Barber Booking</a><p>Le bon barber, au bon moment.</p><span>© Barber Booking</span></footer>
+</body>
+</html>

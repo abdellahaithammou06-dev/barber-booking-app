@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#090910">
+  <meta name="description" content="Contactez Barber Booking pour vos réservations et rendez-vous en tant que client.">
+  <title>Contact client — Barber Booking</title>
+  <link rel="stylesheet" href="/styles.css"><link rel="stylesheet" href="/theme.css"><link rel="stylesheet" href="/contact.css">
+  <script defer src="/contact-auth.js"></script><script defer src="/contact.js"></script>
+</head>
+<body class="contact-page" data-contact-role="client">
+  <header><a href="/" class="brand">Barber Booking</a><nav aria-label="Navigation principale"><a data-role-link="client" href="/#recherche">Trouver un barbier</a><a data-role-link="client" href="/mes-reservations.html">Mes réservations</a><a data-role-link="client" href="/contact-client.html" aria-current="page">Contact</a></nav><div class="auth-actions" aria-label="Compte"><a id="login-link" class="button button-secondary" href="/connexion.html">Connexion</a><a id="register-link" class="button" href="/creer-un-compte.html">Créer un compte</a><button id="logout" type="button" hidden>Déconnexion</button></div></header>
+  <main class="contact-main">
+    <section class="contact-hero"><p class="eyebrow"><span aria-hidden="true">✦</span> ESPACE CLIENT</p><h1>Besoin d’aide pour<br><span>votre rendez-vous ?</span></h1><p>Une question sur une réservation, un changement de créneau ou votre compte ? Décrivez votre demande et nous vous répondrons dès que possible.</p></section>
+    <section class="contact-layout" aria-labelledby="contact-form-title">
+      <div class="contact-copy"><p class="eyebrow">CONTACT CLIENT</p><h2 id="contact-form-title">Comment peut-on vous aider ?</h2><p>Ajoutez les informations utiles pour que nous puissions retrouver votre réservation et vous répondre plus vite.</p><div class="contact-note"><span aria-hidden="true">◷</span><p><strong>Une réponse au plus vite</strong><br>Nous traiterons votre demande dès que possible.</p></div></div>
+      <form id="contact-form" class="contact-form" novalidate><input type="hidden" name="role" value="client"><label>Votre nom<input name="name" autocomplete="name" placeholder="Nom et prénom" required maxlength="100"></label><label>Votre e-mail<input name="email" type="email" autocomplete="email" placeholder="vous@exemple.com" required maxlength="254"></label><label>Objet<select name="subject" required><option value="">Choisir un sujet</option></select></label><label>Votre message<textarea name="message" rows="5" placeholder="Comment peut-on vous aider ?" required minlength="10" maxlength="3000"></textarea></label><button class="contact-submit" type="submit">Préparer mon message <span aria-hidden="true">↗</span></button><p id="contact-status" class="contact-status" aria-live="polite">Le formulaire ouvrira votre application e-mail pour envoyer le message.</p></form>
+    </section>
+    <section class="contact-details" aria-labelledby="contact-details-title"><h2 id="contact-details-title">Nos coordonnées</h2><div class="contact-detail-list"><div class="contact-detail"><span class="detail-icon" aria-hidden="true">✉</span><div><span>E-mail</span><a href="mailto:abdellahaithammou06@gmail.com">abdellahaithammou06@gmail.com</a></div></div><div class="contact-detail"><span class="detail-icon" aria-hidden="true">⌕</span><div><span>Téléphone</span><a href="tel:+212677892608">06 77 89 26 08</a></div></div><div class="contact-detail"><span class="detail-icon" aria-hidden="true">⌖</span><div><span>Adresse</span><strong>Agadir, Maroc</strong></div></div></div></section>
+    <section class="account-help"><div><p class="eyebrow">VOS DONNÉES</p><h2>Suppression de compte</h2><p>Vous souhaitez demander la suppression de votre compte et de vos données personnelles ? Mentionnez-le dans votre message.</p></div><a href="#contact-form-title" class="account-help-link">Faire une demande <span aria-hidden="true">↗</span></a></section>
+  </main>
+  <footer class="contact-footer"><a href="/" class="brand">Barber Booking</a><p>Le bon barber, au bon moment.</p><span>© Barber Booking</span></footer>
+</body>
+</html>
