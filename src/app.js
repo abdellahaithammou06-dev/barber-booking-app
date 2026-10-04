@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const path = require('path');
 const authRoutes = require('./routes/authRoutes');
 const barberRoutes = require('./routes/barberRoutes');
 const appointmentRoutes = require('./routes/appointmentRoutes');
@@ -18,7 +19,7 @@ app.use(express.json({
   limit: '100kb',
   verify(req, res, buffer) { req.rawBody = Buffer.from(buffer); },
 }));
-app.use(express.static('public'));
+app.use(express.static(path.resolve(__dirname, '../public')));
 
 // Point de contrôle sans accès à la base, pratique pour vérifier le serveur.
 app.get('/api/health', (req, res) => {
@@ -37,6 +38,21 @@ app.use('/appointments', appointmentRoutes);
 app.use('/reviews', reviewRoutes);
 app.use('/admin', adminRoutes);
 app.use('/webhooks/whatsapp', whatsappRoutes);
+
+// Le middleware express.static ne sert pas toujours les fichiers dans les environnements
+// qui regroupent Express en fonction. Ce repli garde les pages et leurs assets accessibles.
+const dossierPublic = path.resolve(__dirname, '../public');
+app.use((req, res, next) => {
+  if (req.method !== 'GET' && req.method !== 'HEAD') return next();
+
+  const cheminDemande = req.path === '/' ? '/index.html' : req.path;
+  const fichier = path.resolve(dossierPublic, `.${cheminDemande}`);
+  if (!fichier.startsWith(`${dossierPublic}${path.sep}`)) return next();
+
+  res.sendFile(fichier, (erreur) => {
+    if (erreur) next();
+  });
+});
 
 // Réponse homogène pour les routes qui seront ajoutées progressivement.
 app.use((req, res) => {

@@ -18,7 +18,8 @@ const pool = mysql.createPool({
 
 /**
  * Vérifie explicitement la configuration et l'accès à MySQL au démarrage.
- * La connexion récupérée est toujours rendue au pool.
+ * La connexion de vérification est fermée après le ping. Sur Vercel, le pool
+ * ne doit pas réutiliser cette connexion d'initialisation devenue inactive.
  */
 async function verifierConnexionBDD() {
   const variablesRequises = ['DB_HOST', 'DB_NAME', 'DB_USER', 'DB_PASSWORD'];
@@ -35,7 +36,7 @@ async function verifierConnexionBDD() {
   try {
     await connexion.ping();
   } finally {
-    connexion.release();
+    connexion.destroy();
   }
 }
 
