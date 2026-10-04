@@ -155,7 +155,6 @@ async function barberDashboard() {
     try { const profile = await api('/barbers/me/profile'); await api(`/barbers/${profile.id}/services/${button.dataset.removeService}`, { method: 'DELETE' }); await loadServices(); }
     catch (error) { window.alert(error.message); }
   });
-  $('#refresh-appointments')?.addEventListener('click', loadAppointments);
   await loadAppointments();
 }
 
@@ -194,6 +193,8 @@ async function adminDashboard() {
   });
   try { await Promise.all([loadUsers(), loadReviews()]); } catch (error) { if (usersBox) usersBox.innerHTML = `<p class="form-message is-error">${escapeHtml(error.message)}</p>`; }
 }
+
+$('#refresh-appointments')?.addEventListener('click', loadAppointments);
 
 if ($('#profile-form')) barberDashboard();
 else if ($('#admin-users')) adminDashboard();

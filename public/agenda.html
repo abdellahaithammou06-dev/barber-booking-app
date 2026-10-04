@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Agenda — Barber Booking</title>
+  <link rel="stylesheet" href="/styles.css">
+  <script defer src="/page.js"></script>
+</head>
+<body data-page-access="barber" class="agenda-page">
+  <header>
+    <a href="/espace-barbier.html" class="brand">Barber Booking</a>
+    <nav>
+      <a data-role-link="barber" href="/espace-barbier.html">Espace barbier</a>
+      <a data-role-link="barber" href="/agenda.html" aria-current="page">Agenda</a>
+    </nav>
+    <div class="auth-actions" aria-label="Compte">
+      <button id="logout" type="button">Déconnexion</button>
+    </div>
+  </header>
+  <main class="agenda-main">
+    <section>
+      <div class="section-heading">
+        <div><p class="eyebrow">AGENDA</p><h2>Rendez-vous clients</h2></div>
+        <button class="button button-secondary" id="refresh-appointments" type="button">Actualiser</button>
+      </div>
+      <div id="barber-appointment-list" aria-live="polite"></div>
+    </section>
+  </main>
+  <footer>© Barber Booking — une réservation simple, un service soigné.</footer>
+</body>
+</html>
