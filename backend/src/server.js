@@ -16,7 +16,7 @@ async function demarrerServeur() {
   await verifierConnexionBDD();
   demarrerRappelsRendezVous();
 
-  app.listen(port, () => {
+  app.listen(port, '0.0.0.0', () => {
     console.log(`API Barber Booking disponible sur le port ${port}.`);
   });
 }
