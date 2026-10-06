@@ -54,7 +54,7 @@ async function initialiserBase() {
       );
     }
 
-    const schema = await fs.readFile(path.join(__dirname, '..', 'schema.sql'), 'utf8');
+    const schema = await fs.readFile(path.join(__dirname, '..', '..', 'database', 'schema.sql'), 'utf8');
     await connexion.query(schema);
     console.log('La base Barber Booking a été initialisée avec schema.sql.');
   } finally {

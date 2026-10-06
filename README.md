@@ -10,7 +10,7 @@ Application de réservation de salons de coiffure pour hommes. Les clients reche
 ## Installation
 
 1. Créez une base de données MySQL vide.
-2. Importez `schema.sql` dans cette base. Le schéma ajoute aussi les prestations proposées dans le catalogue. Ce fichier initialise une base neuve; il ne migre pas une ancienne base.
+2. Importez `database/schema.sql` dans cette base. Le schéma ajoute aussi les prestations proposées dans le catalogue. Ce fichier initialise une base neuve; il ne migre pas une ancienne base.
 3. Copiez `.env.example` vers `.env` et renseignez les paramètres MySQL et deux secrets JWT indépendants.
 4. Installez les dépendances avec `npm install`.
 5. Lancez l'application avec `npm run dev`, puis ouvrez `http://localhost:3000`.
@@ -29,13 +29,13 @@ L'application s'arrête au démarrage si la base ou les secrets ne sont pas conf
 
 Gardez une copie de sauvegarde de la base. La commande d'initialisation est destinée à une base vide; si elle détecte un schéma partiel, elle s'arrête et demande une vérification.
 
-Pour une base existante issue de l'ancien schéma, sauvegardez-la puis lancez une seule fois `mysql -u <utilisateur> -p <nom_de_base> < migrations/001_catalogue_prestations.sql`. Les anciennes prestations sont conservées dans `services_legacy` et recopiées dans le nouveau catalogue.
+Pour une base existante issue de l'ancien schéma, sauvegardez-la puis lancez une seule fois `mysql -u <utilisateur> -p <nom_de_base> < database/migrations/001_catalogue_prestations.sql`. Les anciennes prestations sont conservées dans `services_legacy` et recopiées dans le nouveau catalogue.
 
-Pour une base créée avant l'ajout des rappels, lancez aussi une fois `mysql -u <utilisateur> -p <nom_de_base> < migrations/002_rappels_email_rendez_vous.sql`. Une base neuve créée avec `schema.sql` inclut déjà ces champs.
+Pour une base créée avant l'ajout des rappels, lancez aussi une fois `mysql -u <utilisateur> -p <nom_de_base> < database/migrations/002_rappels_email_rendez_vous.sql`. Une base neuve créée avec `database/schema.sql` inclut déjà ces champs.
 
-Pour une base créée avant l'ajout de la connexion Google, lancez une fois `mysql -u <utilisateur> -p <nom_de_base> < migrations/003_connexion_google.sql`.
+Pour une base créée avant l'ajout de la connexion Google, lancez une fois `mysql -u <utilisateur> -p <nom_de_base> < database/migrations/003_connexion_google.sql`.
 
-Pour activer les rappels WhatsApp sur une base existante, appliquez une fois `mysql -u <utilisateur> -p <nom_de_base> < migrations/004_rappels_whatsapp.sql`.
+Pour activer les rappels WhatsApp sur une base existante, appliquez une fois `mysql -u <utilisateur> -p <nom_de_base> < database/migrations/004_rappels_whatsapp.sql`.
 
 ## Comptes et rôles
 
@@ -68,4 +68,4 @@ La connexion Google utilise Google Identity Services et vérifie le jeton côté
 
 ## API
 
-Les pages sont servies depuis `public/`. L'API expose les routes `/auth`, `/barbers`, `/appointments`, `/reviews` et `/admin`. `GET /api/health` vérifie la disponibilité HTTP sans interroger la base.
+Les pages sont dans `frontend/public/`, l'API Express dans `backend/src/` et le schéma ainsi que les migrations MySQL dans `database/`. `backend/scripts/` contient l'initialisation de la base. L'API expose les routes `/auth`, `/barbers`, `/appointments`, `/reviews` et `/admin`. `GET /api/health` vérifie la disponibilité HTTP sans interroger la base.

@@ -19,7 +19,7 @@ app.use(express.json({
   limit: '100kb',
   verify(req, res, buffer) { req.rawBody = Buffer.from(buffer); },
 }));
-app.use(express.static(path.resolve(__dirname, '../public')));
+app.use(express.static(path.resolve(__dirname, '../../frontend/public')));
 
 // Point de contrôle sans accès à la base, pratique pour vérifier le serveur.
 app.get('/api/health', (req, res) => {
@@ -41,7 +41,7 @@ app.use('/webhooks/whatsapp', whatsappRoutes);
 
 // Le middleware express.static ne sert pas toujours les fichiers dans les environnements
 // qui regroupent Express en fonction. Ce repli garde les pages et leurs assets accessibles.
-const dossierPublic = path.resolve(__dirname, '../public');
+const dossierPublic = path.resolve(__dirname, '../../frontend/public');
 app.use((req, res, next) => {
   if (req.method !== 'GET' && req.method !== 'HEAD') return next();
 
