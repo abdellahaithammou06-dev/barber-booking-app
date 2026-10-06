@@ -9,8 +9,11 @@ const subjectSelect = contactForm.elements.subject;
 const statusText = document.querySelector('#contact-status');
 
 function updateSubjects(role) {
-  subjectSelect.replaceChildren(new Option('Choisir un sujet', ''));
-  subjectsByRole[role].forEach((subject) => subjectSelect.add(new Option(subject, subject)));
+  const selectedSubject = subjectSelect.value;
+  const options = [new Option('Choisir un sujet', '')];
+  subjectsByRole[role].forEach((subject) => options.push(new Option(subject, subject)));
+  subjectSelect.replaceChildren(...options);
+  if (subjectsByRole[role].includes(selectedSubject)) subjectSelect.value = selectedSubject;
   roleInput.value = role;
 }
 
@@ -30,32 +33,32 @@ contactForm.addEventListener('submit', async (event) => {
   event.preventDefault();
   statusText.classList.remove('is-error');
   if (!contactForm.reportValidity()) return;
-
-  let supportEmail = '';
-  try {
-    const response = await fetch('/api/public-config');
-    if (response.ok) supportEmail = (await response.json()).contactEmail?.trim() || '';
-  } catch {
-    // Le message ci-dessous indique comment terminer la configuration.
-  }
-  if (!supportEmail) {
-    statusText.textContent = 'Le formulaire est prêt, mais l’adresse e-mail de support doit être configurée par le propriétaire du site avant l’envoi.';
-    statusText.classList.add('is-error');
-    return;
-  }
-
   const data = new FormData(contactForm);
-  const roleLabel = data.get('role') === 'barber' ? 'Barbier' : 'Client';
-  const shop = data.get('shop');
-  const body = `Profil : ${roleLabel}\nNom : ${data.get('name')}\nE-mail : ${data.get('email')}${shop ? `\nSalon : ${shop}` : ''}\n\n${data.get('message')}`;
-  const mailto = `mailto:${supportEmail}?subject=${encodeURIComponent(`[Barber Booking] ${data.get('subject')}`)}&body=${encodeURIComponent(body)}`;
-  window.location.href = mailto;
-  statusText.textContent = 'Votre application e-mail va s’ouvrir avec votre message. Vérifiez-le puis envoyez-le.';
+  const bouton = contactForm.querySelector('[type="submit"]');
+  bouton.disabled = true;
+  statusText.textContent = 'Envoi de votre message…';
+  try {
+    const response = await fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(Object.fromEntries(data)),
+    });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.message || 'Le message n’a pas pu être envoyé.');
+    statusText.textContent = result.message || 'Votre message a bien été envoyé.';
+    contactForm.reset();
+    roleInput.value = fixedRole || roleInput.value;
+  } catch (error) {
+    statusText.textContent = error.message || 'Erreur d’envoi. Réessayez plus tard.';
+    statusText.classList.add('is-error');
+  } finally {
+    bouton.disabled = false;
+  }
 });
 
 const fixedRole = document.body.dataset.contactRole;
 if (fixedRole) {
-  updateSubjects(fixedRole);
+  roleInput.value = fixedRole;
 } else {
   contactForm.hidden = true;
   document.querySelector('.contact-layout').hidden = true;

@@ -7,6 +7,7 @@ const appointmentRoutes = require('./routes/appointmentRoutes');
 const reviewRoutes = require('./routes/reviewRoutes');
 const adminRoutes = require('./routes/adminRoutes');
 const whatsappRoutes = require('./routes/whatsappRoutes');
+const contactRoutes = require('./routes/contactRoutes');
 const { lister: listerAvis } = require('./controllers/reviewController');
 const { param } = require('express-validator');
 const { valider } = require('./middlewares/validation');
@@ -16,7 +17,7 @@ const app = express();
 // Les futurs contrôleurs reçoivent ici les corps JSON des requêtes API.
 app.use(cors());
 app.use(express.json({
-  limit: '100kb',
+  limit: '1mb',
   verify(req, res, buffer) { req.rawBody = Buffer.from(buffer); },
 }));
 app.use(express.static(path.resolve(__dirname, '../../frontend/public')));
@@ -38,6 +39,7 @@ app.use('/appointments', appointmentRoutes);
 app.use('/reviews', reviewRoutes);
 app.use('/admin', adminRoutes);
 app.use('/webhooks/whatsapp', whatsappRoutes);
+app.use('/api/contact', contactRoutes);
 
 // Le middleware express.static ne sert pas toujours les fichiers dans les environnements
 // qui regroupent Express en fonction. Ce repli garde les pages et leurs assets accessibles.

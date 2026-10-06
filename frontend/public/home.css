@@ -150,9 +150,31 @@ body.home-theme {
 .home-theme #barber-results .card h3 { color: #f6f3ff; font-size: 1.15rem; }
 .home-theme #barber-results .card p { color: #aaa7b9; font-size: .83rem; }
 .home-theme #barber-results .card button { margin-top: .7rem; padding: .62rem .9rem; font-size: .78rem; }
+.home-theme #barber-results.cards { grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 1.1rem; }
+.home-theme #barber-results .barber-card { min-height: 0; padding: 0; transition: transform .22s ease, border-color .22s ease, box-shadow .22s ease; }
+.home-theme #barber-results .barber-card:hover { transform: translateY(-5px); border-color: #aa8cff58; box-shadow: 0 20px 48px #0008, 0 0 0 1px #aa8cff12; }
+.home-theme #barber-results .barber-card:before,.home-theme #barber-results .barber-card:after { content: none; }
+.barber-card-cover,.barber-profile-cover { position: relative; display: grid; place-items: center; overflow: hidden; background: radial-gradient(ellipse at 70% 15%, #8964d84d, transparent 42%), linear-gradient(125deg, #292535, #11111a 72%); }
+.barber-card-cover { aspect-ratio: 2.12 / 1; border-bottom: 1px solid #ffffff14; }
+.barber-card-cover img,.barber-profile-cover img { width: 100%; height: 100%; object-fit: cover; }
+.barber-card-cover img { position: absolute; inset: 0; transition: transform .45s ease; }
+.barber-card:hover .barber-card-cover img { transform: scale(1.045); }
+.cover-fallback { display: grid; width: 3.25rem; height: 3.25rem; place-items: center; border: 1px solid #c4aaff4a; border-radius: 50%; color: #c4aaff; background: #a484ff12; font-size: 1.45rem; }
+.barber-card-body { padding: 1rem 1.1rem 1.15rem; }
+.home-theme #barber-results .barber-card h3 { margin: 0 0 .55rem; font-size: 1.08rem; }
+.home-theme #barber-results .barber-card p { margin: .35rem 0; }
+.barber-card-address { display: flex; align-items: flex-start; gap: .35rem; }
+.barber-card-address span { color: #ad91ff; }
+.home-theme #barber-results .barber-card .barber-card-rating { color: #f3d98c; }
+.barber-card-rating span { color: #aaa7b9; }
+.home-theme #barber-results .barber-card button { display: flex; justify-content: space-between; width: 100%; margin-top: .85rem; padding: .68rem .85rem; border: 1px solid #a484ff2e; background: #a484ff11; color: #e8e0ff; }
+.home-theme #barber-results .barber-card button:hover { border-color: #a484ff66; background: #a484ff22; }
 .home-theme .empty-search { padding: 1.4rem; border-color: #ffffff25; background: #ffffff05; color: #a19fb3; }
 
 .home-theme .profile-section { padding: 2rem; border: 1px solid #ffffff1c; border-radius: 1.1rem; background: #11111a; }
+.home-theme .barber-profile-cover { min-height: clamp(190px, 32vw, 390px); aspect-ratio: 2.7 / 1; margin: 1.1rem 0 1.5rem; border: 1px solid #ffffff18; border-radius: .9rem; }
+.barber-profile-copy h2 { margin: .2rem 0 .5rem; font-size: clamp(1.7rem, 4vw, 2.5rem); letter-spacing: -.045em; }
+.barber-profile-copy p { color: #aaa7b9; }
 .home-theme .profile-section h3 { margin-top: 1.8rem; color: #f4f1ff; }
 .home-theme .profile-section .card,.home-theme .profile-section .panel { border-color: #ffffff17; background: #191822; }
 .home-theme .profile-section input,.home-theme .profile-section select,.home-theme .profile-section textarea { border-color: #ffffff20; background: #0d0d15; color: #f3f2fa; }

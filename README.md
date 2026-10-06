@@ -23,7 +23,8 @@ L'application s'arrête au démarrage si la base ou les secrets ne sont pas conf
 2. Ajoutez un service **MySQL** dans le projet Railway.
 3. Dans le service de l'application, reliez les variables MySQL du service de base aux variables `DB_HOST`, `DB_PORT`, `DB_NAME`, `DB_USER` et `DB_PASSWORD` attendues par l'application.
 4. Dans les variables de l'application, ajoutez `JWT_ACCESS_SECRET` et `JWT_REFRESH_SECRET` avec deux valeurs longues et différentes. Ajoutez les autres variables nécessaires, par exemple `GOOGLE_CLIENT_ID` ou les paramètres WhatsApp, seulement si ces fonctions doivent être activées.
-5. Dans les réglages de déploiement de l'application, définissez **Pre-deploy Command** sur `npm run db:init`. Cette commande crée le schéma lors du premier déploiement et ne le réexécute pas si toutes les tables sont déjà présentes.
+   Pour recevoir les demandes Contact dans votre boîte mail, créez une clé API Resend et ajoutez `RESEND_API_KEY`, `CONTACT_EMAIL` (adresse destinataire) et `CONTACT_FROM_EMAIL` (adresse expéditrice validée par Resend) aux variables Railway. Sans cette configuration, le formulaire affichera un message d’erreur et n’ouvrira aucun logiciel de courrier.
+5. Le fichier `railway.toml` lance `npm run db:init` avant chaque déploiement. Il crée le schéma d'une base neuve et applique la migration des photos de salon sur une base déjà initialisée.
 6. Railway détecte `npm start` dans `package.json`. Déployez l'application, puis activez un domaine public HTTPS dans les réglages réseau du service.
 7. Ouvrez le domaine fourni par Railway. Pour WhatsApp, indiquez ensuite `https://<domaine>/webhooks/whatsapp` comme URL de rappel dans Meta et configurez les secrets dans les variables du service.
 
@@ -53,6 +54,9 @@ Les clients peuvent annuler une réservation au moins deux heures avant le rende
 | `JWT_ACCESS_EXPIRES_IN` | Durée du jeton d'accès (15 minutes par défaut) |
 | `JWT_REFRESH_EXPIRES_IN` | Durée du jeton de renouvellement (7 jours par défaut) |
 | `GOOGLE_CLIENT_ID` | Identifiant OAuth de type application Web créé dans Google Cloud |
+| `RESEND_API_KEY` | Clé privée Resend utilisée côté serveur pour envoyer le formulaire Contact |
+| `CONTACT_EMAIL` | Adresse qui reçoit les messages Contact (par défaut `abdellahaithammou06@gmail.com`) |
+| `CONTACT_FROM_EMAIL` | Adresse expéditrice validée dans Resend (par défaut l’adresse de test Resend) |
 | `APPOINTMENT_CANCELLATION_MIN_HOURS` | Délai minimal d'annulation client (2 heures par défaut) |
 | `WHATSAPP_ACCESS_TOKEN`, `WHATSAPP_PHONE_NUMBER_ID` | Identifiants d'envoi de la WhatsApp Cloud API |
 | `WHATSAPP_API_VERSION` | Version Graph API utilisée (v26.0 par défaut) |

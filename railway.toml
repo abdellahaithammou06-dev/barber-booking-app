@@ -1,0 +1,2 @@
+[deploy]
+preDeployCommand = ["npm run db:init"]

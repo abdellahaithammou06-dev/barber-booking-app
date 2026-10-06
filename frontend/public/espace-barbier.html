@@ -45,6 +45,12 @@
           <label>Adresse<input name="address" maxlength="255" placeholder="Ville, rue, quartier"></label>
           <label>Téléphone<input name="phone" maxlength="20" type="tel"></label>
           <label>À propos<textarea name="description" rows="4" maxlength="2000" placeholder="Présentez votre salon et votre expérience"></textarea></label>
+          <div class="cover-photo-field">
+            <label for="cover-photo-input">Photo de votre barbershop</label>
+            <p class="hint">Ajoutez une photo pour présenter votre salon dans les résultats. JPG, PNG ou WebP.</p>
+            <input id="cover-photo-input" type="file" accept="image/jpeg,image/png,image/webp">
+            <div id="cover-photo-preview" class="cover-photo-preview" aria-live="polite"><span>Votre photo apparaîtra ici</span></div>
+          </div>
           <div class="location-picker-field">
             <div><strong>Emplacement du salon</strong><p class="hint">Cliquez sur la carte ou déplacez le marqueur pour placer votre salon.</p></div>
             <div id="location-picker" aria-label="Carte de sélection de l’emplacement du salon"></div>

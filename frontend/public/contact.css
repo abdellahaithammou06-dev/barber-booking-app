@@ -24,7 +24,8 @@
 .contact-form label { color: #e7e5ee; }
 .contact-form input, .contact-form select, .contact-form textarea { border: 1px solid #ffffff20; border-radius: .8rem; background: #0d0e15; color: #f7f5fb; }
 .contact-form input::placeholder, .contact-form textarea::placeholder { color: #777786; }
-.contact-form input:focus, .contact-form select:focus, .contact-form textarea:focus { border-color: #a88bea; box-shadow: 0 0 0 3px #a88bea24; }.contact-form select { color-scheme: dark; }
+.contact-form input:focus, .contact-form select:focus, .contact-form textarea:focus { border-color: #a88bea; box-shadow: 0 0 0 3px #a88bea24; }
+.contact-form select { color-scheme: dark; }
 .contact-form select option { background: #15161f; color: #f7f5fb; }
 .contact-form textarea { resize: vertical; min-height: 140px; }
 .contact-page .contact-submit { justify-content: space-between; min-height: 54px; padding: .85rem 1.1rem; border-radius: .85rem; background: linear-gradient(110deg, #3a3152, #282432); color: #fff; border-color: #ffffff24; }

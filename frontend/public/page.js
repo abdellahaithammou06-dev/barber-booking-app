@@ -79,6 +79,11 @@ $('#chat-replies')?.addEventListener('click', (event) => {
 });
 let locationMap;
 let locationMarker;
+let shopCoverImage = null;
+function afficherPhotoSalon(url) {
+  const preview = $('#cover-photo-preview');
+  if (preview) preview.innerHTML = url ? `<img src="${escapeHtml(url)}" alt="Aperçu de la photo du salon">` : '<span>Votre photo apparaîtra ici</span>';
+}
 async function api(url, options = {}) {
   const response = await fetch(url, { ...options, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}`, ...options.headers } });
   const body = await response.json().catch(() => ({}));
@@ -190,6 +195,7 @@ async function barberDashboard() {
   try {
     const [profile, catalog, hours] = await Promise.all([api('/barbers/me/profile'), api('/barbers/services/catalog'), api('/barbers/me/hours')]);
     if (profile) for (const [key, value] of Object.entries({ shopName: profile.shop_name, address: profile.address, phone: profile.phone, description: profile.description, latitude: profile.latitude, longitude: profile.longitude })) form.elements[key].value = value ?? '';
+    afficherPhotoSalon(profile?.cover_photo_url);
     initializeLocationPicker(profile);
     $('#service-form').elements.serviceId.innerHTML = '<option value="">Choisir une prestation</option>' + catalog.map((s) => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
     const days = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
@@ -202,9 +208,38 @@ async function barberDashboard() {
   form.addEventListener('submit', async (event) => {
     event.preventDefault();
     const values = Object.fromEntries(new FormData(form));
+    if (shopCoverImage) values.coverImage = shopCoverImage;
     for (const key of ['latitude', 'longitude']) values[key] = values[key] === '' ? null : Number(values[key]);
-    try { await api('/barbers/me/profile', { method: 'PUT', body: JSON.stringify(values) }); showMessage('#profile-message', 'Profil enregistré.'); await loadServices(); }
+    try { const savedProfile = await api('/barbers/me/profile', { method: 'PUT', body: JSON.stringify(values) }); shopCoverImage = null; afficherPhotoSalon(savedProfile.cover_photo_url); showMessage('#profile-message', 'Profil et photo du salon enregistrés.'); await loadServices(); }
     catch (error) { showMessage('#profile-message', error.message, true); }
+  });
+  $('#cover-photo-input')?.addEventListener('change', async (event) => {
+    const file = event.currentTarget.files?.[0];
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 8 * 1024 * 1024) {
+      event.currentTarget.value = '';
+      showMessage('#profile-message', 'Choisissez une image JPG, PNG ou WebP de moins de 8 Mo.', true);
+      return;
+    }
+    try {
+      const source = await createImageBitmap(file);
+      const scale = Math.min(1, 1440 / source.width, 1000 / source.height);
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.round(source.width * scale);
+      canvas.height = Math.round(source.height * scale);
+      canvas.getContext('2d').drawImage(source, 0, 0, canvas.width, canvas.height);
+      source.close();
+      let quality = 0.82;
+      let image = canvas.toDataURL('image/webp', quality);
+      while (image.length > 700_000 && quality > 0.45) {
+        quality -= 0.1;
+        image = canvas.toDataURL('image/webp', quality);
+      }
+      if (image.length > 700_000) throw new Error('Image trop volumineuse après compression. Choisissez une photo plus petite.');
+      shopCoverImage = image;
+      afficherPhotoSalon(image);
+      showMessage('#profile-message', 'Photo prête. Enregistrez le profil pour la publier.');
+    } catch (error) { showMessage('#profile-message', error.message || 'Cette photo n’a pas pu être chargée.', true); }
   });
   $('#service-form').addEventListener('submit', async (event) => {
     event.preventDefault();

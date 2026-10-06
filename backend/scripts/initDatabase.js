@@ -43,6 +43,17 @@ async function initialiserBase() {
     const tablesManquantes = tablesAttendues.filter((table) => !tablesExistantes.has(table));
 
     if (tablesManquantes.length === 0) {
+      const [colonnesPhoto] = await connexion.execute(
+        `SELECT data_type FROM information_schema.columns
+         WHERE table_schema = ? AND table_name = 'barber_photos' AND column_name = 'url'`,
+        [process.env.DB_NAME],
+      );
+      if (colonnesPhoto[0]?.DATA_TYPE?.toLowerCase() !== 'longtext'
+        && colonnesPhoto[0]?.data_type?.toLowerCase() !== 'longtext') {
+        const migration = await fs.readFile(path.join(__dirname, '..', '..', 'database', 'migrations', '005_barbershop_cover_photos.sql'), 'utf8');
+        await connexion.query(migration);
+        console.log('La migration des photos de salon a été appliquée.');
+      }
       console.log('La base Barber Booking est déjà initialisée.');
       return;
     }

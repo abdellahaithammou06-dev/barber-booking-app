@@ -12,7 +12,7 @@ async function lister(req, res, next) {
   if (q) { conditions.push('(b.shop_name LIKE ? OR b.address LIKE ?)'); valeurs.push(`%${q}%`, `%${q}%`); }
   if (service) { conditions.push('EXISTS (SELECT 1 FROM barber_services bs JOIN services s ON s.id = bs.service_id WHERE bs.barber_id = b.id AND s.name LIKE ?)'); valeurs.push(`%${service}%`); }
   try {
-    const [lignes] = await pool.execute(`SELECT b.id, b.shop_name, b.address, b.latitude, b.longitude, b.description, b.phone, ${distance}, COALESCE(AVG(r.rating), 0) AS rating, COUNT(r.id) AS review_count FROM barbers b JOIN users u ON u.id = b.user_id LEFT JOIN reviews r ON r.barber_id = b.id AND r.is_hidden = FALSE WHERE ${conditions.join(' AND ')} GROUP BY b.id ORDER BY distance_km IS NULL, distance_km ASC, rating DESC`, valeurs);
+    const [lignes] = await pool.execute(`SELECT b.id, b.shop_name, b.address, b.latitude, b.longitude, b.description, b.phone, (SELECT CASE WHEN bp.url LIKE 'data:image/webp;base64,%' THEN CONCAT('/barbers/', b.id, '/cover-photo') ELSE bp.url END FROM barber_photos bp WHERE bp.barber_id = b.id AND bp.is_cover = TRUE ORDER BY bp.id DESC LIMIT 1) AS cover_photo_url, ${distance}, COALESCE(AVG(r.rating), 0) AS rating, COUNT(r.id) AS review_count FROM barbers b JOIN users u ON u.id = b.user_id LEFT JOIN reviews r ON r.barber_id = b.id AND r.is_hidden = FALSE WHERE ${conditions.join(' AND ')} GROUP BY b.id ORDER BY distance_km IS NULL, distance_km ASC, rating DESC`, valeurs);
     return res.json(lignes);
   } catch (erreur) { return next(erreur); }
 }
@@ -23,7 +23,7 @@ async function detail(req, res, next) {
     if (!barbiers[0]) return res.status(404).json({ message: 'Barbier introuvable.' });
     const [services, photos] = await Promise.all([
       pool.execute('SELECT s.id, s.name, s.description, bs.price, bs.duration_minutes AS duration FROM barber_services bs JOIN services s ON s.id = bs.service_id WHERE bs.barber_id = ? ORDER BY bs.price', [req.params.id]),
-      pool.execute('SELECT * FROM barber_photos WHERE barber_id = ? ORDER BY is_cover DESC', [req.params.id]),
+      pool.execute("SELECT id, barber_id, CASE WHEN url LIKE 'data:image/webp;base64,%' THEN CONCAT('/barbers/', barber_id, '/cover-photo') ELSE url END AS url, is_cover FROM barber_photos WHERE barber_id = ? ORDER BY is_cover DESC", [req.params.id]),
     ]);
     return res.json({ ...barbiers[0], services: services[0], photos: photos[0] });
   } catch (erreur) { return next(erreur); }
@@ -36,20 +36,36 @@ async function monBarbier(utilisateurId) {
 
 async function monProfil(req, res, next) {
   try {
-    const [lignes] = await pool.execute('SELECT * FROM barbers WHERE user_id = ?', [req.utilisateur.id]);
+    const [lignes] = await pool.execute("SELECT b.*, (SELECT CASE WHEN bp.url LIKE 'data:image/webp;base64,%' THEN CONCAT('/barbers/', b.id, '/cover-photo') ELSE bp.url END FROM barber_photos bp WHERE bp.barber_id = b.id AND bp.is_cover = TRUE ORDER BY bp.id DESC LIMIT 1) AS cover_photo_url FROM barbers b WHERE b.user_id = ?", [req.utilisateur.id]);
     return res.json(lignes[0] || null);
   } catch (erreur) { return next(erreur); }
 }
 
 async function modifierProfil(req, res, next) {
-  const { shopName, address = null, phone = null, description = null, latitude = null, longitude = null } = req.body;
+  const { shopName, address = null, phone = null, description = null, latitude = null, longitude = null, coverImage = null } = req.body;
   try {
     await pool.execute(
       'INSERT INTO barbers (user_id, shop_name, address, phone, description, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE shop_name = VALUES(shop_name), address = VALUES(address), phone = VALUES(phone), description = VALUES(description), latitude = VALUES(latitude), longitude = VALUES(longitude)',
       [req.utilisateur.id, shopName, address, phone, description, latitude, longitude],
     );
-    const [lignes] = await pool.execute('SELECT * FROM barbers WHERE user_id = ?', [req.utilisateur.id]);
+    const barbier = await monBarbier(req.utilisateur.id);
+    if (coverImage) {
+      await pool.execute('DELETE FROM barber_photos WHERE barber_id = ? AND is_cover = TRUE', [barbier.id]);
+      await pool.execute('INSERT INTO barber_photos (barber_id, url, is_cover) VALUES (?, ?, TRUE)', [barbier.id, coverImage]);
+    }
+    const [lignes] = await pool.execute("SELECT b.*, (SELECT CASE WHEN bp.url LIKE 'data:image/webp;base64,%' THEN CONCAT('/barbers/', b.id, '/cover-photo') ELSE bp.url END FROM barber_photos bp WHERE bp.barber_id = b.id AND bp.is_cover = TRUE ORDER BY bp.id DESC LIMIT 1) AS cover_photo_url FROM barbers b WHERE b.user_id = ?", [req.utilisateur.id]);
     return res.json(lignes[0]);
+  } catch (erreur) { return next(erreur); }
+}
+
+async function photoCouverture(req, res, next) {
+  try {
+    const [photos] = await pool.execute('SELECT url FROM barber_photos WHERE barber_id = ? AND is_cover = TRUE ORDER BY id DESC LIMIT 1', [req.params.id]);
+    const match = photos[0]?.url?.match(/^data:image\/webp;base64,([A-Za-z0-9+/]+={0,2})$/);
+    if (!match) return res.status(404).end();
+    res.set('Content-Type', 'image/webp');
+    res.set('Cache-Control', 'public, max-age=300');
+    return res.send(Buffer.from(match[1], 'base64'));
   } catch (erreur) { return next(erreur); }
 }
 
@@ -161,4 +177,4 @@ async function creneauxDisponibles(req, res, next) {
   } catch (erreur) { return next(erreur); }
 }
 
-module.exports = { lister, detail, servicesDuBarbier, catalogueServices, monProfil, modifierProfil, horairesDuBarbier, modifierHoraires, ajouterService, modifierService, supprimerService, creneauxDisponibles, monBarbier };
+module.exports = { lister, detail, servicesDuBarbier, catalogueServices, monProfil, modifierProfil, photoCouverture, horairesDuBarbier, modifierHoraires, ajouterService, modifierService, supprimerService, creneauxDisponibles, monBarbier };
