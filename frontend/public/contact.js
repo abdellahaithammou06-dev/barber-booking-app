@@ -48,7 +48,7 @@ contactForm.addEventListener('submit', async (event) => {
   const roleLabel = data.get('role') === 'barber' ? 'Barbier' : 'Client';
   const shop = data.get('shop');
   const body = `Profil : ${roleLabel}\nNom : ${data.get('name')}\nE-mail : ${data.get('email')}${shop ? `\nSalon : ${shop}` : ''}\n\n${data.get('message')}`;
-  const mailto = `mailto:${encodeURIComponent(supportEmail)}?subject=${encodeURIComponent(`[Barber Booking] ${data.get('subject')}`)}&body=${encodeURIComponent(body)}`;
+  const mailto = `mailto:${supportEmail}?subject=${encodeURIComponent(`[Barber Booking] ${data.get('subject')}`)}&body=${encodeURIComponent(body)}`;
   window.location.href = mailto;
   statusText.textContent = 'Votre application e-mail va s’ouvrir avec votre message. Vérifiez-le puis envoyez-le.';
 });
