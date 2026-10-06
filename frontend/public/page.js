@@ -195,7 +195,7 @@ async function barberDashboard() {
     const days = ['Dimanche', 'Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
     $('#hours-fields').innerHTML = days.map((day, dayOfWeek) => {
       const current = hours.find((item) => Number(item.day_of_week) === dayOfWeek);
-      return `<div class="hours-row"><label class="day-toggle"><input type="checkbox" name="active-${dayOfWeek}" ${current ? 'checked' : ''}>${day}</label><label>De<input type="time" name="start-${dayOfWeek}" max="21:59" value="${current?.start_time?.slice(0, 5) || '09:00'}"></label><label>À<input type="time" name="end-${dayOfWeek}" value="${current?.end_time?.slice(0, 5) || '22:00'}"></label></div>`;
+      return `<div class="hours-row"><label class="day-toggle"><input type="checkbox" name="active-${dayOfWeek}" ${current ? 'checked' : ''}>${day}</label><label>De<input type="time" name="start-${dayOfWeek}" max="21:59" value="${current?.start_time?.slice(0, 5) || '09:00'}"></label><label>À<input type="time" name="end-${dayOfWeek}" max="22:00" value="${current?.end_time?.slice(0, 5) || '22:00'}"></label></div>`;
     }).join('');
     await loadServices();
   } catch (error) { showMessage('#profile-message', error.message, true); }
