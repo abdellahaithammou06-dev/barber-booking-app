@@ -4,7 +4,7 @@ const jwt = require('jsonwebtoken');
 const { OAuth2Client } = require('google-auth-library');
 const { pool } = require('../config/database');
 const { creerTokens } = require('../config/tokens');
-const { envoyerEmail, urlApplication } = require('../services/emailService');
+const { envoyerEmail, urlApplication, emailConfigure } = require('../services/emailService');
 
 const googleClient = new OAuth2Client();
 
@@ -16,7 +16,7 @@ async function inscrire(req, res, next) {
   const { name, email, password, role = 'client' } = req.body;
   try {
     const verificationRequise = process.env.REQUIRE_EMAIL_VERIFICATION === 'true';
-    if (verificationRequise && !process.env.RESEND_API_KEY) return res.status(503).json({ message: 'La vérification des e-mails doit être configurée avant les nouvelles inscriptions.' });
+    if (verificationRequise && !emailConfigure()) return res.status(503).json({ message: 'La vérification des e-mails doit être configurée avant les nouvelles inscriptions.' });
     const [existants] = await pool.execute('SELECT id FROM users WHERE email = ?', [email.toLowerCase()]);
     if (existants.length) return res.status(409).json({ message: 'Cette adresse e-mail est déjà utilisée.' });
     const hash = await bcrypt.hash(password, 12);
@@ -158,7 +158,7 @@ async function verifierEmail(req, res, next) {
 }
 
 async function renvoyerVerification(req, res, next) {
-  if (!process.env.RESEND_API_KEY) return res.status(503).json({ message: 'L’envoi des e-mails n’est pas configuré sur ce serveur. Contactez l’administrateur.' });
+  if (!emailConfigure()) return res.status(503).json({ message: 'L’envoi des e-mails n’est pas configuré sur ce serveur. Contactez l’administrateur.' });
   try {
     const [[utilisateur]] = await pool.execute('SELECT id, name, email FROM users WHERE email = ? AND email_verified = FALSE', [req.body.email.toLowerCase()]);
     if (utilisateur) await envoyerActionEmail(utilisateur, 'verify_email');
@@ -167,7 +167,7 @@ async function renvoyerVerification(req, res, next) {
 }
 
 async function demanderReinitialisation(req, res, next) {
-  if (!process.env.RESEND_API_KEY) return res.status(503).json({ message: 'L’envoi des e-mails n’est pas configuré sur ce serveur. Contactez l’administrateur.' });
+  if (!emailConfigure()) return res.status(503).json({ message: 'L’envoi des e-mails n’est pas configuré sur ce serveur. Contactez l’administrateur.' });
   try {
     const [[utilisateur]] = await pool.execute('SELECT id, name, email FROM users WHERE email = ?', [req.body.email.toLowerCase()]);
     if (utilisateur) {
