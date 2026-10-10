@@ -8,10 +8,24 @@ CREATE TABLE users (
   email VARCHAR(150) NOT NULL UNIQUE,
   password_hash VARCHAR(255) NOT NULL,
   google_sub VARCHAR(255) NULL,
+  email_verified BOOLEAN NOT NULL DEFAULT TRUE,
+  auth_version INT NOT NULL DEFAULT 0,
   role ENUM('client', 'barber', 'admin') NOT NULL DEFAULT 'client',
   is_active BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   UNIQUE KEY uq_users_google_sub (google_sub)
+);
+
+CREATE TABLE email_action_tokens (
+  id BIGINT AUTO_INCREMENT PRIMARY KEY,
+  user_id INT NOT NULL,
+  purpose ENUM('verify_email', 'reset_password') NOT NULL,
+  token_hash CHAR(64) NOT NULL UNIQUE,
+  expires_at TIMESTAMP NOT NULL,
+  consumed_at TIMESTAMP NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_email_tokens_user_purpose (user_id, purpose, consumed_at),
+  FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
 CREATE TABLE barbers (
@@ -23,6 +37,7 @@ CREATE TABLE barbers (
   longitude DECIMAL(11, 8),
   description TEXT,
   phone VARCHAR(20),
+  verification_status ENUM('pending', 'approved', 'rejected') NOT NULL DEFAULT 'approved',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );

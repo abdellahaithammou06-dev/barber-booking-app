@@ -14,7 +14,7 @@
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script defer src="/app.js"></script>
 </head>
-<body class="home-theme" data-page-access="client">
+<body class="home-theme" data-page-access="client"><a class="skip-link" href="#main-content">Aller au contenu</a>
   <header class="home-header">
     <a href="#accueil" class="brand" aria-label="Barber Booking, accueil"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 6v20M25 6v20M7 11h18M7 21h18"/><path d="m7 6 18 20M25 6 7 26"/></svg>Barber <span>Booking</span></a>
     <nav aria-label="Navigation principale">
@@ -30,7 +30,7 @@
       <button id="logout" hidden>Déconnexion</button>
     </div>
   </header>
-  <main class="home-main">
+  <main id="main-content" class="home-main">
     <section id="accueil" class="hero">
       <div class="hero-glow" aria-hidden="true"></div>
       <div class="hero-art" aria-hidden="true"><div class="hero-art-ring"></div><div class="hero-art-pole"><span></span><span></span><span></span></div><div class="hero-art-sheen"></div></div>
@@ -63,7 +63,7 @@
       <div id="barber-results" class="cards" aria-live="polite"><p class="empty-search">Lance une recherche pour découvrir les barbiers disponibles.</p></div>
     </section>
 
-    <section id="profil" class="profile-section" hidden><button class="button-secondary back" type="button">← Retour aux résultats</button><div id="barber-profile"></div><div id="map" aria-label="Carte du salon"></div><h3>Choisis ton rendez-vous</h3><form id="booking-form" class="grid-form"><label>Prestation<select name="serviceId" required></select></label><label>Date<input type="date" name="date" required></label><label>Horaire<select name="time" required><option value="">Choisir d’abord la date</option></select></label><label>Téléphone WhatsApp<input type="tel" name="clientPhone" autocomplete="tel" placeholder="+212 6 12 34 56 78" maxlength="30"></label><label class="whatsapp-opt-in"><input type="checkbox" name="whatsappOptIn">Recevoir un rappel du rendez-vous sur WhatsApp</label><button>Réserver</button></form><p class="whatsapp-note">Le numéro est demandé uniquement si tu choisis le rappel WhatsApp.</p><p id="booking-message" aria-live="polite"></p><h3>Avis clients</h3><div id="reviews" class="cards"></div></section>
+    <section id="profil" class="profile-section" hidden><button class="button-secondary back" type="button">← Retour aux résultats</button><div id="barber-profile"></div><div id="map" aria-label="Carte du salon"></div><h3>Choisis ton rendez-vous</h3><form id="booking-form" class="grid-form"><label>Prestation<select name="serviceId" required></select></label><label>Date<input type="date" name="date" required></label><label>Horaire<select name="time" required><option value="">Choisir d’abord la date</option></select></label><label>Téléphone WhatsApp<input type="tel" name="clientPhone" autocomplete="tel" placeholder="+212 6 12 34 56 78" maxlength="30"></label><label class="whatsapp-opt-in"><input type="checkbox" name="whatsappOptIn">Recevoir un rappel du rendez-vous sur WhatsApp</label><button>Réserver</button></form><p class="payment-note">Paiement directement au salon, le jour du rendez-vous. Aucun paiement en ligne.</p><p class="whatsapp-note">Le numéro est demandé uniquement si tu choisis le rappel WhatsApp.</p><p id="booking-message" aria-live="polite"></p><h3>Avis clients</h3><div id="reviews" class="cards"></div></section>
   </main>
   <footer class="home-footer"><a href="#accueil" class="brand">Barber <span>Booking</span></a><p>Le bon barber, au bon moment.</p><span>© Barber Booking</span></footer>
 </body>

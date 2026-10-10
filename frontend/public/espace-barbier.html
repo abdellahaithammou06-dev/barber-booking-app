@@ -11,7 +11,7 @@
   <script defer src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script defer src="/page.js"></script>
 </head>
-<body data-page-access="barber">
+<body data-page-access="barber"><a class="skip-link" href="#main-content">Aller au contenu</a>
   <header>
     <a href="/espace-barbier.html" class="brand"><svg aria-hidden="true" viewBox="0 0 32 32"><path d="M7 6v20M25 6v20M7 11h18M7 21h18"/><path d="m7 6 18 20M25 6 7 26"/></svg>Barber <span>Booking</span></a>
     <nav>
@@ -28,7 +28,7 @@
       <button id="logout" hidden>Déconnexion</button>
     </div>
   </header>
-  <main>
+  <main id="main-content">
     <section class="page-intro">
       <p class="eyebrow">ESPACE PROFESSIONNEL</p>
       <h1>Votre salon, en un seul endroit.</h1>
@@ -39,6 +39,7 @@
     <section class="dashboard-grid">
       <div class="panel">
         <h2>Profil du salon</h2>
+        <p id="verification-status" class="hint" aria-live="polite">Les nouveaux salons sont vérifiés par l’équipe avant d’apparaître dans les résultats publics.</p>
         <p class="hint">Ces informations seront visibles par les clients.</p>
         <form id="profile-form" class="stack-form">
           <label>Nom du salon<input name="shopName" required maxlength="150"></label>

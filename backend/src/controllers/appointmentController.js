@@ -31,7 +31,7 @@ async function creer(req, res, next) {
       return res.status(422).json({ message: 'Choisissez un créneau qui n’est pas encore passé.' });
     }
     // Serialize bookings per salon so simultaneous requests cannot claim the same free slot.
-    const [[barbier]] = await connexion.execute('SELECT id FROM barbers WHERE id = ? FOR UPDATE', [barberId]);
+    const [[barbier]] = await connexion.execute("SELECT id FROM barbers WHERE id = ? AND verification_status = 'approved' FOR UPDATE", [barberId]);
     if (!barbier) { await connexion.rollback(); return res.status(404).json({ message: 'Barbier introuvable.' }); }
     const [[service]] = await connexion.execute('SELECT bs.price, bs.duration_minutes FROM barber_services bs WHERE bs.service_id = ? AND bs.barber_id = ?', [serviceId, barberId]);
     if (!service) { await connexion.rollback(); return res.status(404).json({ message: 'Service introuvable pour ce barbier.' }); }
@@ -61,17 +61,67 @@ async function miens(req, res, next) {
     return res.json(lignes.map((rdv) => {
       const dateRdv = typeof rdv.date === 'string' ? rdv.date.slice(0, 10) : rdv.date.toISOString().slice(0, 10);
       const finRdv = instantMaroc(dateRdv, rdv.time) + Number(rdv.duration_minutes || 0) * 60 * 1000;
+      const avantRdv = instantMaroc(dateRdv, rdv.time) - Date.now();
       const peutAnnuler = rdv.status === 'pending'
-        || (rdv.status === 'confirmed' && instantMaroc(dateRdv, rdv.time) - Date.now() >= delai);
+        || (rdv.status === 'confirmed' && avantRdv >= delai);
       return {
         ...rdv,
         is_past: finRdv <= Date.now(),
         can_delete: finRdv <= Date.now() && ['client', 'barber'].includes(req.utilisateur.role),
         client_can_cancel: req.utilisateur.role === 'barber' ? undefined : peutAnnuler,
+        client_can_reschedule: req.utilisateur.role !== 'barber' && ['pending', 'confirmed'].includes(rdv.status)
+          && finRdv > Date.now() && (rdv.status === 'pending' || avantRdv >= delai),
         cancellation_min_hours: delai / (60 * 60 * 1000),
       };
     }));
   } catch (erreur) { return next(erreur); }
+}
+
+async function replanifier(req, res, next) {
+  const { date, time } = req.body;
+  if (req.utilisateur.role !== 'client') return res.status(403).json({ message: 'Seul le client peut déplacer ce rendez-vous.' });
+  let connexion;
+  try {
+    connexion = await pool.getConnection();
+    await connexion.beginTransaction();
+    const [[reservationInitiale]] = await connexion.execute('SELECT id, barber_id FROM appointments WHERE id = ? AND client_id = ?', [req.params.id, req.utilisateur.id]);
+    if (!reservationInitiale) { await connexion.rollback(); return res.status(404).json({ message: 'Rendez-vous introuvable.' }); }
+    // Lock in the same order as new bookings (barber, then appointment rows)
+    // to reduce deadlocks when two clients choose the same slot concurrently.
+    await connexion.execute('SELECT id FROM barbers WHERE id = ? FOR UPDATE', [reservationInitiale.barber_id]);
+    const [[rdv]] = await connexion.execute('SELECT * FROM appointments WHERE id = ? AND client_id = ? FOR UPDATE', [req.params.id, req.utilisateur.id]);
+    if (!rdv) { await connexion.rollback(); return res.status(404).json({ message: 'Rendez-vous introuvable.' }); }
+    if (!['pending', 'confirmed'].includes(rdv.status)) { await connexion.rollback(); return res.status(422).json({ message: 'Ce rendez-vous ne peut plus être déplacé.' }); }
+    const heuresMin = Number(process.env.APPOINTMENT_CANCELLATION_MIN_HOURS || 2);
+    const ancienneDate = typeof rdv.date === 'string' ? rdv.date.slice(0, 10) : rdv.date.toISOString().slice(0, 10);
+    if (rdv.status === 'confirmed' && instantMaroc(ancienneDate, rdv.time) - Date.now() < heuresMin * 60 * 60 * 1000) {
+      await connexion.rollback();
+      return res.status(403).json({ message: `Un rendez-vous confirmé peut être déplacé jusqu’à ${heuresMin} h avant l’heure prévue.` });
+    }
+    const maintenant = heureLocaleMaroc();
+    if (date < maintenant.date || (date === maintenant.date && minutes(time) <= maintenant.minutes)) {
+      await connexion.rollback();
+      return res.status(422).json({ message: 'Choisissez un créneau futur.' });
+    }
+    const [[service]] = await connexion.execute('SELECT service_id FROM barber_services WHERE service_id = ? AND barber_id = ?', [rdv.service_id, rdv.barber_id]);
+    if (!service) { await connexion.rollback(); return res.status(422).json({ message: 'Cette prestation n’est plus proposée par le salon.' }); }
+    const jour = new Date(`${date}T12:00:00`).getDay();
+    const [[absence]] = await connexion.execute('SELECT id FROM time_off WHERE barber_id = ? AND date = ? AND is_full_day = TRUE', [rdv.barber_id, date]);
+    const [horaires] = await connexion.execute('SELECT start_time, end_time FROM working_hours WHERE barber_id = ? AND day_of_week = ? AND is_active = TRUE', [rdv.barber_id, jour]);
+    const debut = minutes(time);
+    const dansHoraire = !absence && horaires.some((h) => debut >= minutes(h.start_time) && debut + Number(rdv.duration_minutes) <= minutes(h.end_time));
+    if (!dansHoraire) { await connexion.rollback(); return res.status(422).json({ message: 'Ce créneau est hors des horaires du salon.' }); }
+    const [existants] = await connexion.execute("SELECT time, duration_minutes FROM appointments WHERE barber_id = ? AND date = ? AND id <> ? AND status IN ('pending', 'confirmed') FOR UPDATE", [rdv.barber_id, date, rdv.id]);
+    const conflit = existants.some((autre) => debut < minutes(autre.time) + autre.duration_minutes && debut + Number(rdv.duration_minutes) > minutes(autre.time));
+    if (conflit) { await connexion.rollback(); return res.status(409).json({ message: 'Ce créneau vient d’être réservé. Choisissez-en un autre.' }); }
+    await connexion.execute('UPDATE appointments SET date = ?, time = ? WHERE id = ?', [date, time, rdv.id]);
+    await connexion.execute("UPDATE notifications SET status = 'pending', sent_at = NULL WHERE appointment_id = ? AND type = 'reminder'", [rdv.id]);
+    await connexion.commit();
+    return res.json({ ...rdv, date, time });
+  } catch (erreur) {
+    if (connexion) await connexion.rollback();
+    return next(erreur);
+  } finally { connexion?.release(); }
 }
 
 async function supprimer(req, res, next) {
@@ -123,4 +173,4 @@ async function changerStatut(req, res, next) {
     return res.json({ ...rdv, status });
   } catch (erreur) { return next(erreur); }
 }
-module.exports = { creer, miens, changerStatut, supprimer };
+module.exports = { creer, miens, changerStatut, supprimer, replanifier };

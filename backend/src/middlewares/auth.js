@@ -10,10 +10,10 @@ async function authentifier(req, res, next) {
   try {
     const chargeUtile = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
     const [lignes] = await pool.execute(
-      'SELECT id, name, email, role, is_active FROM users WHERE id = ?',
+      'SELECT id, name, email, role, is_active, auth_version FROM users WHERE id = ?',
       [chargeUtile.id],
     );
-    if (!lignes[0] || !lignes[0].is_active) {
+    if (!lignes[0] || !lignes[0].is_active || Number(chargeUtile.auth_version || 0) !== Number(lignes[0].auth_version || 0)) {
       return res.status(401).json({ message: 'Compte invalide ou désactivé.' });
     }
     req.utilisateur = lignes[0];

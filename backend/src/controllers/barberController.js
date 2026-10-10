@@ -2,7 +2,7 @@ const { pool } = require('../config/database');
 
 async function lister(req, res, next) {
   const { service, q, latitude, longitude } = req.query;
-  const conditions = ['u.is_active = TRUE'];
+  const conditions = ["u.is_active = TRUE", "b.verification_status = 'approved'"];
   const valeurs = [];
   let distance = 'NULL AS distance_km';
   if (latitude !== undefined && longitude !== undefined) {
@@ -19,7 +19,7 @@ async function lister(req, res, next) {
 
 async function detail(req, res, next) {
   try {
-    const [barbiers] = await pool.execute('SELECT b.*, u.name AS owner_name FROM barbers b JOIN users u ON u.id = b.user_id WHERE b.id = ? AND u.is_active = TRUE', [req.params.id]);
+    const [barbiers] = await pool.execute("SELECT b.*, u.name AS owner_name FROM barbers b JOIN users u ON u.id = b.user_id WHERE b.id = ? AND u.is_active = TRUE AND b.verification_status = 'approved'", [req.params.id]);
     if (!barbiers[0]) return res.status(404).json({ message: 'Barbier introuvable.' });
     const [services, photos] = await Promise.all([
       pool.execute('SELECT s.id, s.name, s.description, bs.price, bs.duration_minutes AS duration FROM barber_services bs JOIN services s ON s.id = bs.service_id WHERE bs.barber_id = ? ORDER BY bs.price', [req.params.id]),
@@ -45,7 +45,7 @@ async function modifierProfil(req, res, next) {
   const { shopName, address = null, phone = null, description = null, latitude = null, longitude = null, coverImage = null } = req.body;
   try {
     await pool.execute(
-      'INSERT INTO barbers (user_id, shop_name, address, phone, description, latitude, longitude) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE shop_name = VALUES(shop_name), address = VALUES(address), phone = VALUES(phone), description = VALUES(description), latitude = VALUES(latitude), longitude = VALUES(longitude)',
+      "INSERT INTO barbers (user_id, shop_name, address, phone, description, latitude, longitude, verification_status) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending') ON DUPLICATE KEY UPDATE shop_name = VALUES(shop_name), address = VALUES(address), phone = VALUES(phone), description = VALUES(description), latitude = VALUES(latitude), longitude = VALUES(longitude)",
       [req.utilisateur.id, shopName, address, phone, description, latitude, longitude],
     );
     const barbier = await monBarbier(req.utilisateur.id);

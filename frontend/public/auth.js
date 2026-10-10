@@ -56,6 +56,7 @@ form?.addEventListener('submit', async (event) => {
   const button = form.querySelector('button');
   button.disabled = true;
   message.textContent = '';
+  message.classList.remove('is-error');
 
   try {
     const response = await fetch(isRegister ? '/auth/register' : '/auth/login', {
@@ -65,9 +66,19 @@ form?.addEventListener('submit', async (event) => {
     });
     const data = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(data.message || 'Une erreur est survenue.');
+    if (data.message && !data.accessToken) {
+      message.textContent = data.message;
+      button.disabled = false;
+      message.tabIndex = -1;
+      message.focus();
+      return;
+    }
     ouvrirSession(data);
   } catch (error) {
     message.textContent = error.message;
+    message.classList.add('is-error');
+    message.tabIndex = -1;
+    message.focus();
     button.disabled = false;
   }
 });

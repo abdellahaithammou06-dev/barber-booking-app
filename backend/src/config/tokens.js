@@ -8,7 +8,7 @@ function verifierSecretsJWT() {
 
 function creerTokens(utilisateur) {
   verifierSecretsJWT();
-  const chargeUtile = { id: utilisateur.id, role: utilisateur.role };
+  const chargeUtile = { id: utilisateur.id, role: utilisateur.role, auth_version: utilisateur.auth_version || 0 };
 
   return {
     accessToken: jwt.sign(chargeUtile, process.env.JWT_ACCESS_SECRET, {

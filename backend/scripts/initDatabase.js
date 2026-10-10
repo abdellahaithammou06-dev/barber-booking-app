@@ -54,6 +54,21 @@ async function initialiserBase() {
         await connexion.query(migration);
         console.log('La migration des photos de salon a été appliquée.');
       }
+      await ajouterColonneSiAbsente(connexion, 'users', 'email_verified', 'BOOLEAN NOT NULL DEFAULT TRUE');
+      await ajouterColonneSiAbsente(connexion, 'users', 'auth_version', 'INT NOT NULL DEFAULT 0');
+      await ajouterColonneSiAbsente(connexion, 'barbers', 'verification_status', "ENUM('pending','approved','rejected') NOT NULL DEFAULT 'approved'");
+      await connexion.query(`CREATE TABLE IF NOT EXISTS email_action_tokens (
+        id BIGINT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        purpose ENUM('verify_email', 'reset_password') NOT NULL,
+        token_hash CHAR(64) NOT NULL UNIQUE,
+        expires_at TIMESTAMP NOT NULL,
+        consumed_at TIMESTAMP NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        KEY idx_email_tokens_user_purpose (user_id, purpose, consumed_at),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )`);
+      console.log('Les migrations de sécurité des comptes sont à jour.');
       console.log('La base Barber Booking est déjà initialisée.');
       return;
     }
@@ -71,6 +86,14 @@ async function initialiserBase() {
   } finally {
     await connexion.end();
   }
+}
+
+async function ajouterColonneSiAbsente(connexion, table, colonne, definition) {
+  const [[existe]] = await connexion.execute(
+    `SELECT COUNT(*) AS total FROM information_schema.columns WHERE table_schema = ? AND table_name = ? AND column_name = ?`,
+    [process.env.DB_NAME, table, colonne],
+  );
+  if (Number(existe.total) === 0) await connexion.query(`ALTER TABLE \`${table}\` ADD COLUMN \`${colonne}\` ${definition}`);
 }
 
 initialiserBase().catch((erreur) => {

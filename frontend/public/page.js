@@ -125,6 +125,41 @@ function confirmerSuppressionRdv() {
     dialog.showModal();
   });
 }
+function afficherDialogueDeplacement(rendezVous) {
+  let dialog = $('#reschedule-appointment-dialog');
+  if (!dialog) {
+    dialog = document.createElement('dialog');
+    dialog.id = 'reschedule-appointment-dialog';
+    dialog.className = 'reschedule-dialog';
+    dialog.setAttribute('aria-labelledby', 'reschedule-title');
+    dialog.innerHTML = `<form id="reschedule-appointment-form"><p class="eyebrow">MODIFIER LE RENDEZ-VOUS</p><h2 id="reschedule-title">Choisir un autre créneau</h2><label>Date<input name="date" type="date" required></label><label>Heure<input name="time" type="time" step="1800" required></label><p id="reschedule-error" class="form-message is-error" role="alert"></p><div class="dialog-actions"><button type="button" class="button-secondary" data-close-reschedule>Retour</button><button type="submit">Enregistrer</button></div></form>`;
+    document.body.append(dialog);
+    dialog.querySelector('[data-close-reschedule]').addEventListener('click', () => dialog.close());
+    dialog.querySelector('form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      const submit = form.querySelector('[type="submit"]');
+      submit.disabled = true;
+      $('#reschedule-error').textContent = '';
+      try {
+        await api(`/appointments/${dialog.dataset.appointmentId}/reschedule`, { method: 'PUT', body: JSON.stringify({ date: form.elements.date.value, time: form.elements.time.value }) });
+        dialog.close();
+        await loadAppointments();
+        $('#appointment-message').textContent = 'Le rendez-vous a été déplacé.';
+      } catch (error) {
+        $('#reschedule-error').textContent = error.message;
+      } finally { submit.disabled = false; }
+    });
+  }
+  const dateInput = dialog.querySelector('[name="date"]');
+  const localDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Africa/Casablanca', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
+  dateInput.min = localDate;
+  dateInput.value = typeof rendezVous.date === 'string' ? rendezVous.date.slice(0, 10) : rendezVous.date.toISOString().slice(0, 10);
+  dialog.querySelector('[name="time"]').value = String(rendezVous.time).slice(0, 5);
+  $('#reschedule-error').textContent = '';
+  dialog.dataset.appointmentId = rendezVous.id;
+  dialog.showModal();
+}
 function initializeLocationPicker(profile) {
   const mapElement = $('#location-picker');
   if (!mapElement) return;
@@ -171,6 +206,7 @@ async function loadAppointments() {
   const list = $('#appointment-list') || $('#barber-appointment-list');
   if (!list) return;
   try {
+    if (!$('#appointment-message')) list.insertAdjacentHTML('beforebegin', '<p id="appointment-message" aria-live="polite"></p>');
     const appointments = await api('/appointments/me');
     window.currentAppointments = appointments;
     const now = Date.now();
@@ -189,6 +225,7 @@ async function loadAppointments() {
         ? ['pending', 'confirmed'].includes(a.status)
         : a.client_can_cancel === true;
       const canDelete = a.can_delete === true;
+      const canReschedule = !isBarber && a.client_can_reschedule === true;
       const canConfirm = isBarber && a.status === 'pending';
       const canComplete = isBarber && a.status === 'confirmed';
       const actions = [
@@ -197,13 +234,15 @@ async function loadAppointments() {
         canCancel ? `<button class="button-secondary" data-status="${isBarber ? 'cancelled_by_barber' : 'cancelled_by_client'}" data-id="${a.id}">Annuler</button>` : '',
         !isBarber && a.status === 'completed' && !a.has_review ? `<button data-review="${a.id}" data-barber="${a.barber_id}">Laisser un avis</button>` : '',
         canDelete ? `<button class="button-secondary" data-delete-appointment="${a.id}">Supprimer</button>` : '',
+        canReschedule ? `<button class="button-secondary" data-reschedule-appointment="${a.id}">Déplacer</button>` : '',
       ].filter(Boolean).join('');
       const party = isBarber ? a.client_name : a.shop_name;
       const price = a.price_at_booking != null ? ` · ${Number(a.price_at_booking).toFixed(2)} MAD` : '';
       const cancellationNote = !isBarber && a.status === 'confirmed' && !a.client_can_cancel
         ? `<p class="hint">Ce rendez-vous confirmé ne peut plus être annulé à moins de ${escapeHtml(a.cancellation_min_hours)} h du rendez-vous.</p>`
         : '';
-      return `<article class="appointment"><div><strong>${escapeHtml(party || 'Rendez-vous')}</strong><span class="status-pill">${escapeHtml(a.status)}</span></div><p>${escapeHtml(a.service_name)}${price}</p><p>${formatDate(a.date)} à ${String(a.time).slice(0, 5)}</p>${cancellationNote}${actions ? `<div class="card-actions">${actions}</div>` : ''}</article>`;
+      const statusLabel = { pending: 'En attente', confirmed: 'Confirmé', completed: 'Terminé', no_show: 'Absent', cancelled_by_client: 'Annulé par le client', cancelled_by_barber: 'Annulé par le salon' }[a.status] || a.status;
+      return `<article class="appointment"><div><strong>${escapeHtml(party || 'Rendez-vous')}</strong><span class="status-pill">${escapeHtml(statusLabel)}</span></div><p>${escapeHtml(a.service_name)}${price}</p><p>${formatDate(a.date)} à ${String(a.time).slice(0, 5)}</p>${cancellationNote}${actions ? `<div class="card-actions">${actions}</div>` : ''}</article>`;
     }).join('') : '<p class="hint">Aucun rendez-vous pour le moment.</p>';
   } catch (error) { list.innerHTML = `<p class="form-message is-error">${escapeHtml(error.message)}</p>`; }
 }
@@ -212,6 +251,11 @@ document.addEventListener('click', async (event) => {
   const statusButton = event.target.closest('[data-status]');
   const reviewButton = event.target.closest('[data-review]');
   const deleteButton = event.target.closest('[data-delete-appointment]');
+  const rescheduleButton = event.target.closest('[data-reschedule-appointment]');
+  if (rescheduleButton) {
+    const appointment = window.currentAppointments?.find((item) => String(item.id) === rescheduleButton.dataset.rescheduleAppointment);
+    if (appointment) afficherDialogueDeplacement(appointment);
+  }
   if (deleteButton) {
     if (!await confirmerSuppressionRdv()) return;
     deleteButton.disabled = true;
@@ -243,6 +287,7 @@ async function barberDashboard() {
   try {
     const [profile, catalog, hours] = await Promise.all([api('/barbers/me/profile'), api('/barbers/services/catalog'), api('/barbers/me/hours')]);
     if (profile) for (const [key, value] of Object.entries({ shopName: profile.shop_name, address: profile.address, phone: profile.phone, description: profile.description, latitude: profile.latitude, longitude: profile.longitude })) form.elements[key].value = value ?? '';
+    if (profile?.verification_status) $('#verification-status').textContent = ({ pending: 'Votre salon sera visible après vérification par l’équipe.', approved: 'Votre salon est vérifié et visible dans les résultats.', rejected: 'La vérification du salon a été refusée. Contactez-nous pour en savoir plus.' })[profile.verification_status];
     afficherPhotoSalon(profile?.cover_photo_url);
     initializeLocationPicker(profile);
     $('#service-form').elements.serviceId.innerHTML = '<option value="">Choisir une prestation</option>' + catalog.map((s) => `<option value="${s.id}">${escapeHtml(s.name)}</option>`).join('');
@@ -335,19 +380,26 @@ async function adminDashboard() {
   const usersBox = $('#admin-users'); const reviewsBox = $('#admin-reviews');
   async function loadUsers() {
     const users = await api('/admin/users');
-    usersBox.innerHTML = `<table><thead><tr><th>Nom</th><th>E-mail</th><th>Rôle</th><th>Statut</th><th></th></tr></thead><tbody>${users.map((u) => `<tr><td>${escapeHtml(u.name)}</td><td>${escapeHtml(u.email)}</td><td>${escapeHtml(u.role)}</td><td>${u.is_active ? 'Actif' : 'Suspendu'}</td><td><button data-toggle-user="${u.id}" data-active="${u.is_active ? 'false' : 'true'}">${u.is_active ? 'Suspendre' : 'Réactiver'}</button></td></tr>`).join('')}</tbody></table>`;
+    usersBox.innerHTML = `<table><thead><tr><th>Nom</th><th>E-mail</th><th>Rôle</th><th>Compte</th><th>Vérification du salon</th><th></th></tr></thead><tbody>${users.map((u) => {
+      const verificationLabel = { pending: 'En attente', approved: 'Vérifié', rejected: 'Refusé' }[u.verification_status] || '—';
+      const verificationAction = u.role !== 'barber' ? '' : u.verification_status === 'approved'
+        ? `<button class="button-secondary" data-verify-barber="${u.id}" data-verification="rejected">Retirer la vérification</button>`
+        : `<button data-verify-barber="${u.id}" data-verification="approved">${u.verification_status === 'rejected' ? 'Réexaminer le salon' : 'Vérifier le salon'}</button><button class="button-secondary" data-verify-barber="${u.id}" data-verification="rejected">Refuser</button>`;
+      return `<tr><td>${escapeHtml(u.name)}</td><td>${escapeHtml(u.email)}</td><td>${escapeHtml(u.role)}</td><td>${u.is_active ? 'Actif' : 'Suspendu'}${u.email_verified ? '' : ' · E-mail non vérifié'}</td><td>${verificationLabel}</td><td>${verificationAction}<button data-toggle-user="${u.id}" data-active="${u.is_active ? 'false' : 'true'}">${u.is_active ? 'Suspendre' : 'Réactiver'}</button></td></tr>`;
+    }).join('')}</tbody></table>`;
   }
   async function loadReviews() {
     const reviews = await api('/admin/reviews');
     reviewsBox.innerHTML = reviews.length ? `<table><thead><tr><th>Salon</th><th>Auteur</th><th>Avis</th><th>Modération</th><th></th></tr></thead><tbody>${reviews.map((r) => `<tr><td>${escapeHtml(r.shop_name)}</td><td>${escapeHtml(r.client_name)}</td><td>★ ${r.rating}<br>${escapeHtml(r.comment)}</td><td>${r.is_hidden ? 'Masqué' : 'Visible'}${r.is_flagged ? ' · Signalé' : ''}</td><td><button data-moderate-review="${r.id}" data-hidden="${r.is_hidden ? 'false' : 'true'}" data-flagged="false">${r.is_hidden ? 'Afficher' : 'Masquer'}</button></td></tr>`).join('')}</tbody></table>` : '<p class="hint">Aucun avis à modérer.</p>';
   }
   document.addEventListener('click', async (event) => {
-    const reload = event.target.closest('[data-reload]'); const userButton = event.target.closest('[data-toggle-user]'); const reviewButton = event.target.closest('[data-moderate-review]');
+    const reload = event.target.closest('[data-reload]'); const userButton = event.target.closest('[data-toggle-user]'); const reviewButton = event.target.closest('[data-moderate-review]'); const verifyButton = event.target.closest('[data-verify-barber]');
     try {
       if (reload?.dataset.reload === 'users') await loadUsers();
       if (reload?.dataset.reload === 'reviews') await loadReviews();
       if (userButton) { await api(`/admin/users/${userButton.dataset.toggleUser}/active`, { method: 'PUT', body: JSON.stringify({ isActive: userButton.dataset.active === 'true' }) }); await loadUsers(); }
       if (reviewButton) { await api(`/admin/reviews/${reviewButton.dataset.moderateReview}/moderation`, { method: 'PUT', body: JSON.stringify({ isHidden: reviewButton.dataset.hidden === 'true', isFlagged: reviewButton.dataset.flagged === 'true' }) }); await loadReviews(); }
+      if (verifyButton) { await api(`/admin/users/${verifyButton.dataset.verifyBarber}/barber-verification`, { method: 'PUT', body: JSON.stringify({ status: verifyButton.dataset.verification }) }); await loadUsers(); }
     } catch (error) { window.alert(error.message); }
   });
   try { await Promise.all([loadUsers(), loadReviews()]); } catch (error) { if (usersBox) usersBox.innerHTML = `<p class="form-message is-error">${escapeHtml(error.message)}</p>`; }

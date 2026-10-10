@@ -14,6 +14,23 @@ const { valider } = require('./middlewares/validation');
 
 const app = express();
 
+app.use((req, res, next) => {
+  res.set({
+    'X-Content-Type-Options': 'nosniff',
+    'X-Frame-Options': 'DENY',
+    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+  });
+  next();
+});
+
+// Railway forwards the original client IP in X-Forwarded-For. Keeping this
+// configurable avoids trusting arbitrary proxy chains in other deployments.
+const trustedProxyHops = Number(process.env.TRUST_PROXY_HOPS ?? 1);
+if (Number.isInteger(trustedProxyHops) && trustedProxyHops >= 0) {
+  app.set('trust proxy', trustedProxyHops);
+}
+
 // Les futurs contrôleurs reçoivent ici les corps JSON des requêtes API.
 app.use(cors());
 app.use(express.json({
@@ -25,6 +42,17 @@ app.use(express.static(path.resolve(__dirname, '../../frontend/public')));
 // Point de contrôle sans accès à la base, pratique pour vérifier le serveur.
 app.get('/api/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
+});
+
+app.get('/api/ready', async (req, res) => {
+  try {
+    const { pool } = require('./config/database');
+    const connection = await pool.getConnection();
+    try { await connection.ping(); } finally { connection.release(); }
+    return res.status(200).json({ status: 'ready' });
+  } catch {
+    return res.status(503).json({ status: 'unavailable' });
+  }
 });
 
 // L'adresse de contact est publique par nature, contrairement aux identifiants SMTP.
@@ -64,6 +92,10 @@ app.use((req, res) => {
 // Dernier filet de sécurité : aucun détail interne n'est envoyé au client.
 app.use((erreur, req, res, next) => {
   console.error(erreur);
+  if (['ER_CON_COUNT_ERROR', 'POOL_ENQUEUELIMIT', 'QUEUE_LIMIT_REACHED'].includes(erreur.code)) {
+    res.set('Retry-After', '3');
+    return res.status(503).json({ message: 'Le service est temporairement occupé. Réessayez dans quelques secondes.' });
+  }
   res.status(erreur.code === 'ER_DUP_ENTRY' ? 409 : 500).json({ message: 'Une erreur interne est survenue.' });
 });
 
