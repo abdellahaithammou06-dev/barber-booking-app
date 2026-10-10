@@ -1,137 +1,110 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Montserrat:wght@400;500;600;700&display=swap');
+
 :root {
   color-scheme: dark;
-  --ink: #f3f2fa;
-  --paper: #090910;
-  --white: #12121d;
-  --accent: #9874ff;
-  --accent-dark: #7a55e9;
-  --soft: #282735;
-  --muted: #a19fb3;
-  --green: #b7a5ff;
+  --layout-width: 1320px;
+  --layout-gutter: clamp(18px, 4vw, 48px);
+  --ink: #f5f0e7;
+  --paper: #100e0b;
+  --white: #1b1813;
+  --accent: #b8893f;
+  --accent-dark: #986b2b;
+  --soft: #373127;
+  --muted: #b6ad9e;
+  --green: #d3b274;
   --shadow: 0 18px 55px #0008;
 }
 
+html { scrollbar-gutter: stable; }
+
 body:not(.home-theme) {
-  background: radial-gradient(ellipse at 50% -25%, #2b2042 0, transparent 48rem), #090910;
-  color: #f3f2fa;
+  --gold: #c69b56;
+  background: radial-gradient(ellipse at 50% -25%, #493416 0, transparent 48rem), #100e0b;
+  color: #f5f0e7;
+  font-family: 'Montserrat', ui-sans-serif, system-ui, sans-serif;
 }
-
 body:not(.home-theme) a { color: inherit; }
+body:not(.home-theme) main:not(.auth-main) {
+  width: min(var(--layout-width), 100%);
+  max-width: var(--layout-width);
+  padding-right: var(--layout-gutter);
+  padding-left: var(--layout-gutter);
+}
 body:not(.home-theme) header {
-  position: sticky;
-  top: 12px;
-  z-index: 10;
-  width: min(1420px, calc(100% - 36px));
-  min-height: 68px;
-  margin: 12px auto 0;
-  padding: .65rem 1.1rem;
-  border: 1px solid #ffffff18;
-  border-radius: 999px;
-  background: #14141edc;
-  box-shadow: 0 10px 40px #0004;
-  backdrop-filter: blur(18px);
+  position: sticky; top: 12px; z-index: 10; width: min(var(--layout-width), calc(100% - 48px)); min-height: 72px;
+  margin: 12px auto 0; padding: .65rem .8rem .65rem 1.3rem; border: 1px solid #d7bc8326; border-radius: 999px;
+  background: #17140fe8; box-shadow: 0 10px 40px #0005; backdrop-filter: blur(18px);
 }
-body:not(.home-theme) .brand { color: #fff; font-size: 1.12rem; letter-spacing: -.055em; }
-body:not(.home-theme) .brand:before { content: "✂"; color: #aa8cff; }
-body:not(.home-theme) nav { color: #c3c0d0; font-size: .84rem; }
-body:not(.home-theme) nav a:hover,
-body:not(.home-theme) .back-home:hover { color: #bdaaff; }
-body:not(.home-theme) .button,
-body:not(.home-theme) button {
-  border-radius: 999px;
-  background: #9874ff;
-  color: #0b0914;
-}
-body:not(.home-theme) .button:hover,
-body:not(.home-theme) button:hover { background: #ad91ff; }
-body:not(.home-theme) .button-secondary {
-  border-color: #ffffff24;
-  background: transparent;
-  color: #efedf6;
-}
-body:not(.home-theme) .button-secondary:hover { border-color: #a484ff66; background: #a484ff12; color: #fff; }
-body:not(.home-theme) .eyebrow { color: #b49aff; }
+body:not(.home-theme) .brand { color: #f6f0e5; font-size: 1.12rem; letter-spacing: -.055em; }
+body:not(.home-theme) .brand:before { content: none; }
+body:not(.home-theme) .brand { display: inline-flex; align-items: center; gap: .55rem; font-size: 1.12rem; font-weight: 700; }
+body:not(.home-theme) .brand svg { width: 25px; height: 25px; flex: 0 0 auto; fill: none; stroke: #c69b56; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+body:not(.home-theme) .brand span { margin-left: -.42rem; color: #c69b56; }
+body:not(.home-theme) nav { color: #c8bdab; font-size: .79rem; }
+body:not(.home-theme) nav a:hover, body:not(.home-theme) .back-home:hover { color: #e2bd79; }
+body:not(.home-theme) .button, body:not(.home-theme) button { border-radius: 999px; background: #b8893f; color: #171108; }
+body:not(.home-theme) .auth-actions .button, body:not(.home-theme) .auth-actions button { min-height: 44px; padding: .62rem .95rem; font-size: .78rem; }
+body:not(.home-theme) .button:hover, body:not(.home-theme) button:hover { background: #d2aa65; }
+body:not(.home-theme) .button-secondary { border-color: #ffffff24; background: transparent; color: #f1ece3; }
+body:not(.home-theme) .button-secondary:hover { border-color: #c69b5666; background: #c69b5614; color: #fff; }
+body:not(.home-theme) .eyebrow { color: #d0aa6c; }
 body:not(.home-theme) .page-intro { padding-top: 4.5rem; }
-body:not(.home-theme) .page-intro h1 { color: #f9f8ff; }
-body:not(.home-theme) .page-intro>p:not(.eyebrow) { color: #aaa8ba; }
-
-body:not(.home-theme) .panel,
-body:not(.home-theme) .card,
-body:not(.home-theme) .auth-card {
-  border: 1px solid #ffffff18;
-  background: linear-gradient(150deg, #171722, #111119 72%);
-  box-shadow: 0 18px 55px #0005;
-  color: #f3f2fa;
+body:not(.home-theme) .page-intro h1 { color: #f8f2e8; font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(3rem, 7vw, 5rem); font-weight: 600; }
+body:not(.home-theme) .page-intro>p:not(.eyebrow) { color: #b6ad9e; }
+body:not(.home-theme) .panel, body:not(.home-theme) .card, body:not(.home-theme) .auth-card {
+  border: 1px solid #ffffff1b; border-radius: 1rem; background: linear-gradient(150deg, #211d17, #17140f 72%);
+  box-shadow: 0 18px 55px #0005; color: #f5f0e7;
 }
-body:not(.home-theme) .panel h2,
-body:not(.home-theme) .panel h3,
-body:not(.home-theme) .auth-card h1 { color: #f7f5ff; }
-body:not(.home-theme) .panel p,
-body:not(.home-theme) .hint,
-body:not(.home-theme) .auth-card>p:not(.eyebrow):not(.auth-switch),
-body:not(.home-theme) .auth-switch { color: #a19fb3; }
-body:not(.home-theme) label { color: #d7d4e1; }
-body:not(.home-theme) input,
-body:not(.home-theme) select,
-body:not(.home-theme) textarea {
-  border-color: #ffffff20;
-  border-radius: .65rem;
-  background: #0d0d15;
-  color: #f3f2fa;
-}
-body:not(.home-theme) input::placeholder,
-body:not(.home-theme) textarea::placeholder { color: #777587; }
-body:not(.home-theme) input:focus,
-body:not(.home-theme) select:focus,
-body:not(.home-theme) textarea:focus { border-color: #a88bff; box-shadow: 0 0 0 3px #9874ff25; }
-body:not(.home-theme) .hours-row,
-body:not(.home-theme) .service-row,
-body:not(.home-theme) td,
-body:not(.home-theme) th { border-color: #ffffff15; }
-body:not(.home-theme) .hours-row .day-toggle input,
-body:not(.home-theme) .whatsapp-opt-in input { accent-color: #9874ff; }
-body:not(.home-theme) .appointment {
-  border: 1px solid #ffffff17;
-  border-left: 4px solid #9874ff;
-  border-radius: .8rem;
-  background: linear-gradient(145deg, #191824, #111119);
-  box-shadow: 0 10px 35px #0004;
-}
-body:not(.home-theme) .appointment p { color: #aaa8ba; }
-body:not(.home-theme) .status-pill { background: #a484ff1c; color: #c6b6ff; }
-body:not(.home-theme) .form-message { color: #c2adff; }
+body:not(.home-theme) .panel h2, body:not(.home-theme) .panel h3, body:not(.home-theme) .auth-card h1 { color: #f7f1e7; font-family: 'Cormorant Garamond', Georgia, serif; }
+body:not(.home-theme) .panel p, body:not(.home-theme) .hint, body:not(.home-theme) .auth-card>p:not(.eyebrow):not(.auth-switch), body:not(.home-theme) .auth-switch { color: #b6ad9e; }
+body:not(.home-theme) label { color: #ddd4c6; }
+body:not(.home-theme) input, body:not(.home-theme) select, body:not(.home-theme) textarea { border-color: #ffffff20; border-radius: .65rem; background: #100e0b; color: #f5f0e7; }
+body:not(.home-theme) input::placeholder, body:not(.home-theme) textarea::placeholder { color: #8e8576; }
+body:not(.home-theme) input:focus, body:not(.home-theme) select:focus, body:not(.home-theme) textarea:focus { border-color: #c69b56; box-shadow: 0 0 0 3px #c69b5628; }
+body:not(.home-theme) .hours-row, body:not(.home-theme) .service-row, body:not(.home-theme) td, body:not(.home-theme) th { border-color: #ffffff16; }
+body:not(.home-theme) .hours-row .day-toggle input, body:not(.home-theme) .whatsapp-opt-in input { accent-color: #c69b56; }
+body:not(.home-theme) .appointment { border: 1px solid #ffffff1c; border-left: 4px solid #b8893f; border-radius: .8rem; background: linear-gradient(145deg, #211d17, #17140f); box-shadow: 0 10px 35px #0004; }
+body:not(.home-theme) .appointment p { color: #b6ad9e; }
+body:not(.home-theme) .status-pill { background: #c69b561c; color: #e0c387; }
+body:not(.home-theme) .form-message { color: #e0c387; }
 body:not(.home-theme) .form-message.is-error { color: #ff9eaa; }
-body:not(.home-theme) .auth-page { background: radial-gradient(ellipse at 50% 15%, #38255b 0, transparent 38rem), #090910; }
-body:not(.home-theme).auth-page header {
-  position: relative;
-  top: auto;
-  width: min(1420px, calc(100% - 36px));
-  margin: 14px auto 0;
-}
+body:not(.home-theme) .auth-page { background: radial-gradient(ellipse at 50% 15%, #493416 0, transparent 38rem), #100e0b; }
+body:not(.home-theme).auth-page header { position: relative; top: auto; width: min(var(--layout-width), calc(100% - 48px)); margin: 14px auto 0; }
 body:not(.home-theme) .auth-main { min-height: calc(100vh - 96px); }
 body:not(.home-theme) .auth-card { border-radius: 1.2rem; }
-body:not(.home-theme) .auth-card h1 { font-size: clamp(2.35rem, 7vw, 3.2rem); letter-spacing: -.06em; }
-body:not(.home-theme) .auth-divider { color: #8d8b9d; }
-body:not(.home-theme) .auth-divider:before,
-body:not(.home-theme) .auth-divider:after { background: #ffffff1c; }
-body:not(.home-theme) .auth-switch a { color: #b49aff; }
-body:not(.home-theme) .google-hint { color: #9794a7; }
-body:not(.home-theme) table { color: #e8e6f0; }
-body:not(.home-theme) th { color: #a19fb3; }
-body:not(.home-theme) footer { border-top: 1px solid #ffffff13; background: #0d0d14; color: #8d8b9d; }
-body:not(.home-theme) .appointment-chat { border-color: #ffffff20; background: #13131d; color: #f3f2fa; }
-body:not(.home-theme) .chat-heading { background: #211936; }
-body:not(.home-theme) .chat-message { background: #22212d; color: #efedf6; }
-body:not(.home-theme) .chat-message.is-client { background: #3a2a5f; }
-body:not(.home-theme) .chat-launcher { color: #0b0914; }
+body:not(.home-theme) .auth-card h1 { font-size: clamp(2.5rem, 7vw, 3.5rem); letter-spacing: -.04em; }
+body:not(.home-theme) .auth-divider { color: #a99f8e; }
+body:not(.home-theme) .auth-divider:before, body:not(.home-theme) .auth-divider:after { background: #ffffff1c; }
+body:not(.home-theme) .auth-switch a { color: #e0bd79; }
+body:not(.home-theme) .google-hint { color: #aaa08f; }
+body:not(.home-theme) table { color: #eee8de; }
+body:not(.home-theme) th { color: #b6ad9e; }
+body:not(.home-theme) footer { border-top: 1px solid #ffffff13; background: #0c0a08; color: #a79d8d; }
+body:not(.home-theme) .appointment-chat { border-color: #ffffff20; background: #17140f; color: #f5f0e7; }
+body:not(.home-theme) .chat-heading { background: #473519; }
+body:not(.home-theme) .chat-message { background: #29241b; color: #f0e9dc; }
+body:not(.home-theme) .chat-message.is-client { background: #4a381d; }
+body:not(.home-theme) .chat-launcher { color: #171108; }
+body:not(.home-theme) .cover-photo-field { border-color: #c69b5655; background: linear-gradient(145deg, #211d17, #17140f); color: #f5f0e7; }
+body:not(.home-theme) .cover-photo-field>label { color: #f5f0e7; }
+body:not(.home-theme) .cover-photo-field .hint { color: #b6ad9e; }
+body:not(.home-theme) .cover-photo-field input[type=file] { border-color: #ffffff20; background: #100e0b; color: #eee8de; }
+body:not(.home-theme) .cover-photo-field input[type=file]::file-selector-button { border-color: #c69b5655; background: #302719; color: #f5f0e7; }
+body:not(.home-theme) .cover-photo-preview { border-color: #c69b5655; background: radial-gradient(ellipse at 50% 0%, #302719, #100e0b 72%); color: #d8c9ae; }
+body:not(.home-theme) :focus-visible { outline: 2px solid #e0bd79; outline-offset: 3px; }
+body:not(.home-theme) button, body:not(.home-theme) a { touch-action: manipulation; }
 
-@media (max-width: 900px) {
-  body:not(.home-theme) header { width: calc(100% - 28px); border-radius: 1.2rem; }
-  body:not(.home-theme) nav { justify-content: flex-start; }
+@media (max-width: 980px) {
+  body:not(.home-theme) header { width: calc(100% - 28px); border-radius: 1.2rem; flex-wrap: wrap; }
+  body:not(.home-theme) nav { order: 3; width: 100%; justify-content: flex-start; overflow-x: auto; padding: .2rem 0; font-size: .79rem; }
 }
 @media (max-width: 560px) {
   body:not(.home-theme) header { top: 8px; width: calc(100% - 20px); margin-top: 8px; padding: .55rem .7rem; }
   body:not(.home-theme).auth-page header { width: calc(100% - 20px); }
+  body:not(.home-theme) .brand { gap: .42rem; font-size: .94rem; }
+  body:not(.home-theme) .brand svg { width: 22px; height: 22px; }
+  body:not(.home-theme) nav { font-size: .72rem; }
+  body:not(.home-theme) .auth-actions .button, body:not(.home-theme) .auth-actions button { min-height: 40px; padding: .48rem .68rem; font-size: .68rem; }
   body:not(.home-theme) .page-intro { padding-top: 3rem; }
   body:not(.home-theme) .auth-card { padding: 1.5rem; }
 }
