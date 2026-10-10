@@ -96,6 +96,35 @@ function showMessage(selector, message, error = false) {
   node.textContent = message;
   node.classList.toggle('is-error', error);
 }
+function confirmerSuppressionRdv() {
+  let dialog = $('#delete-appointment-dialog');
+  if (!dialog) {
+    dialog = document.createElement('dialog');
+    dialog.id = 'delete-appointment-dialog';
+    dialog.className = 'delete-confirmation';
+    dialog.setAttribute('aria-labelledby', 'delete-appointment-title');
+    dialog.setAttribute('aria-describedby', 'delete-appointment-description');
+    dialog.innerHTML = `
+      <div class="delete-confirmation-content">
+        <span class="delete-confirmation-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><path d="M4 7h16M10 11v6m4-6v6M6 7l1 13h10l1-13M9 7V4h6v3" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </span>
+        <p class="eyebrow">CONFIRMATION</p>
+        <h2 id="delete-appointment-title">Supprimer ce rendez-vous ?</h2>
+        <p id="delete-appointment-description">Ce rendez-vous passé sera supprimé définitivement de votre agenda.</p>
+        <form method="dialog" class="delete-confirmation-actions">
+          <button type="submit" value="cancel" class="button-secondary" autofocus>Garder le rendez-vous</button>
+          <button type="submit" value="confirm" class="confirm-delete">Supprimer</button>
+        </form>
+      </div>`;
+    document.body.append(dialog);
+  }
+  return new Promise((resolve) => {
+    dialog.addEventListener('close', () => resolve(dialog.returnValue === 'confirm'), { once: true });
+    dialog.returnValue = '';
+    dialog.showModal();
+  });
+}
 function initializeLocationPicker(profile) {
   const mapElement = $('#location-picker');
   if (!mapElement) return;
@@ -184,7 +213,7 @@ document.addEventListener('click', async (event) => {
   const reviewButton = event.target.closest('[data-review]');
   const deleteButton = event.target.closest('[data-delete-appointment]');
   if (deleteButton) {
-    if (!window.confirm('Supprimer définitivement ce rendez-vous passé ?')) return;
+    if (!await confirmerSuppressionRdv()) return;
     deleteButton.disabled = true;
     try {
       await api(`/appointments/${deleteButton.dataset.deleteAppointment}`, { method: 'DELETE' });

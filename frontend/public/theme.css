@@ -81,6 +81,25 @@ body:not(.home-theme) table { color: #eee8de; }
 body:not(.home-theme) th { color: #b6ad9e; }
 body:not(.home-theme) footer { border-top: 1px solid #ffffff13; background: #0c0a08; color: #a79d8d; }
 body:not(.home-theme) .appointment-chat { border-color: #ffffff20; background: #17140f; color: #f5f0e7; }
+body:not(.home-theme) .delete-confirmation {
+  width: min(460px, calc(100% - 32px)); max-width: 460px; margin: auto; padding: 0;
+  border: 1px solid #d7bc8340; border-radius: 1.25rem; background: #1b1813; color: #f5f0e7;
+  box-shadow: 0 28px 90px #000b;
+}
+body:not(.home-theme) .delete-confirmation::backdrop { background: #080705b8; backdrop-filter: blur(5px); }
+body:not(.home-theme) .delete-confirmation-content { padding: clamp(1.35rem, 5vw, 2rem); }
+body:not(.home-theme) .delete-confirmation-icon {
+  display: grid; place-items: center; width: 3rem; height: 3rem; margin-bottom: 1.2rem;
+  border: 1px solid #c76c5b55; border-radius: 1rem; background: #8b3d351c; color: #e28e7e;
+}
+body:not(.home-theme) .delete-confirmation-icon svg { width: 1.35rem; height: 1.35rem; }
+body:not(.home-theme) .delete-confirmation .eyebrow { margin: 0 0 .4rem; font-size: .68rem; }
+body:not(.home-theme) .delete-confirmation h2 { margin: 0; color: #f7f1e7; font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(1.8rem, 7vw, 2.25rem); line-height: 1.1; }
+body:not(.home-theme) #delete-appointment-description { margin: .75rem 0 0; color: #b6ad9e; font-size: .9rem; line-height: 1.65; }
+body:not(.home-theme) .delete-confirmation-actions { display: flex; justify-content: flex-end; gap: .65rem; margin-top: 1.5rem; }
+body:not(.home-theme) .delete-confirmation-actions button { min-height: 44px; padding: .65rem .95rem; font-size: .78rem; }
+body:not(.home-theme) .delete-confirmation-actions .confirm-delete { border-color: #a74b40; background: #8b3d35; color: #fff5f0; }
+body:not(.home-theme) .delete-confirmation-actions .confirm-delete:hover { border-color: #c76557; background: #a74b40; }
 body:not(.home-theme) .chat-heading { background: #473519; }
 body:not(.home-theme) .chat-message { background: #29241b; color: #f0e9dc; }
 body:not(.home-theme) .chat-message.is-client { background: #4a381d; }
@@ -107,4 +126,6 @@ body:not(.home-theme) button, body:not(.home-theme) a { touch-action: manipulati
   body:not(.home-theme) .auth-actions .button, body:not(.home-theme) .auth-actions button { min-height: 40px; padding: .48rem .68rem; font-size: .68rem; }
   body:not(.home-theme) .page-intro { padding-top: 3rem; }
   body:not(.home-theme) .auth-card { padding: 1.5rem; }
+  body:not(.home-theme) .delete-confirmation-actions { display: grid; grid-template-columns: 1fr; }
+  body:not(.home-theme) .delete-confirmation-actions button { width: 100%; }
 }
