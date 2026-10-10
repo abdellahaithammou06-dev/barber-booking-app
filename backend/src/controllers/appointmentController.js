@@ -54,10 +54,45 @@ async function miens(req, res, next) {
   try {
     const barbier = req.utilisateur.role === 'barber' ? await monBarbier(req.utilisateur.id) : null;
     const sql = barbier
-      ? "SELECT a.*, u.name AS client_name, s.name AS service_name FROM appointments a JOIN users u ON u.id = a.client_id JOIN services s ON s.id = a.service_id WHERE a.barber_id = ? AND a.status NOT IN ('cancelled_by_client', 'cancelled_by_barber') AND NOT EXISTS (SELECT 1 FROM reviews r WHERE r.appointment_id = a.id) ORDER BY a.date DESC, a.time DESC"
-      : "SELECT a.*, b.shop_name, b.address AS shop_address, b.phone AS shop_phone, s.name AS service_name FROM appointments a JOIN barbers b ON b.id = a.barber_id JOIN services s ON s.id = a.service_id WHERE a.client_id = ? AND a.status NOT IN ('cancelled_by_client', 'cancelled_by_barber') AND NOT EXISTS (SELECT 1 FROM reviews r WHERE r.appointment_id = a.id) ORDER BY a.date DESC, a.time DESC";
+      ? "SELECT a.*, u.name AS client_name, s.name AS service_name, EXISTS (SELECT 1 FROM reviews r WHERE r.appointment_id = a.id) AS has_review FROM appointments a JOIN users u ON u.id = a.client_id JOIN services s ON s.id = a.service_id WHERE a.barber_id = ? AND a.status NOT IN ('cancelled_by_client', 'cancelled_by_barber') ORDER BY a.date DESC, a.time DESC"
+      : "SELECT a.*, b.shop_name, b.address AS shop_address, b.phone AS shop_phone, s.name AS service_name, EXISTS (SELECT 1 FROM reviews r WHERE r.appointment_id = a.id) AS has_review FROM appointments a JOIN barbers b ON b.id = a.barber_id JOIN services s ON s.id = a.service_id WHERE a.client_id = ? AND a.status NOT IN ('cancelled_by_client', 'cancelled_by_barber') ORDER BY a.date DESC, a.time DESC";
     const [lignes] = await pool.execute(sql, [barbier ? barbier.id : req.utilisateur.id]);
-    return res.json(lignes);
+    const delai = Number(process.env.APPOINTMENT_CANCELLATION_MIN_HOURS || 2) * 60 * 60 * 1000;
+    return res.json(lignes.map((rdv) => {
+      const dateRdv = typeof rdv.date === 'string' ? rdv.date.slice(0, 10) : rdv.date.toISOString().slice(0, 10);
+      const finRdv = instantMaroc(dateRdv, rdv.time) + Number(rdv.duration_minutes || 0) * 60 * 1000;
+      const peutAnnuler = rdv.status === 'pending'
+        || (rdv.status === 'confirmed' && instantMaroc(dateRdv, rdv.time) - Date.now() >= delai);
+      return {
+        ...rdv,
+        is_past: finRdv <= Date.now(),
+        can_delete: finRdv <= Date.now() && ['client', 'barber'].includes(req.utilisateur.role),
+        client_can_cancel: req.utilisateur.role === 'barber' ? undefined : peutAnnuler,
+        cancellation_min_hours: delai / (60 * 60 * 1000),
+      };
+    }));
+  } catch (erreur) { return next(erreur); }
+}
+
+async function supprimer(req, res, next) {
+  try {
+    const [[rdv]] = await pool.execute('SELECT id, client_id, barber_id, date, time, duration_minutes FROM appointments WHERE id = ?', [req.params.id]);
+    if (!rdv) return res.status(404).json({ message: 'Rendez-vous introuvable.' });
+
+    let autorise = req.utilisateur.role === 'admin';
+    if (req.utilisateur.role === 'client') autorise = rdv.client_id === req.utilisateur.id;
+    if (req.utilisateur.role === 'barber') {
+      const barbier = await monBarbier(req.utilisateur.id);
+      autorise = Boolean(barbier && rdv.barber_id === barbier.id);
+    }
+    if (!autorise) return res.status(403).json({ message: 'Vous ne pouvez pas supprimer ce rendez-vous.' });
+
+    const dateRdv = typeof rdv.date === 'string' ? rdv.date.slice(0, 10) : rdv.date.toISOString().slice(0, 10);
+    const finRdv = instantMaroc(dateRdv, rdv.time) + Number(rdv.duration_minutes || 0) * 60 * 1000;
+    if (finRdv > Date.now()) return res.status(422).json({ message: 'Seuls les rendez-vous passés peuvent être supprimés.' });
+
+    await pool.execute('DELETE FROM appointments WHERE id = ?', [rdv.id]);
+    return res.status(204).send();
   } catch (erreur) { return next(erreur); }
 }
 
@@ -77,13 +112,15 @@ async function changerStatut(req, res, next) {
       // A pending request has not been accepted by the barber, so the client can withdraw it at any time.
       autorise = true;
     } else if (rdv.client_id === req.utilisateur.id && status === 'cancelled_by_client' && rdv.status === 'confirmed') {
-      const delai = Number(process.env.APPOINTMENT_CANCELLATION_MIN_HOURS || 2) * 60 * 60 * 1000;
+      const heuresMin = Number(process.env.APPOINTMENT_CANCELLATION_MIN_HOURS || 2);
+      const delai = heuresMin * 60 * 60 * 1000;
       const dateRdv = typeof rdv.date === 'string' ? rdv.date.slice(0, 10) : rdv.date.toISOString().slice(0, 10);
       autorise = instantMaroc(dateRdv, rdv.time) - Date.now() >= delai;
+      if (!autorise) return res.status(403).json({ message: `Un rendez-vous confirmé peut être annulé jusqu’à ${heuresMin} h avant l’heure prévue.` });
     }
     if (!autorise) return res.status(403).json({ message: 'Transition de statut non autorisée.' });
     await pool.execute('UPDATE appointments SET status = ? WHERE id = ?', [status, rdv.id]);
     return res.json({ ...rdv, status });
   } catch (erreur) { return next(erreur); }
 }
-module.exports = { creer, miens, changerStatut };
+module.exports = { creer, miens, changerStatut, supprimer };

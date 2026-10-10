@@ -156,18 +156,25 @@ async function loadAppointments() {
       !['cancelled_by_client', 'cancelled_by_barber'].includes(appointment.status));
     list.innerHTML = visibleAppointments.length ? visibleAppointments.map((a) => {
       const isBarber = role === 'barber';
-      const canCancel = ['pending', 'confirmed'].includes(a.status);
+      const canCancel = isBarber
+        ? ['pending', 'confirmed'].includes(a.status)
+        : a.client_can_cancel === true;
+      const canDelete = a.can_delete === true;
       const canConfirm = isBarber && a.status === 'pending';
       const canComplete = isBarber && a.status === 'confirmed';
       const actions = [
         canConfirm ? `<button data-status="confirmed" data-id="${a.id}">Confirmer</button>` : '',
         canComplete ? `<button data-status="completed" data-id="${a.id}">Terminé</button>` : '',
         canCancel ? `<button class="button-secondary" data-status="${isBarber ? 'cancelled_by_barber' : 'cancelled_by_client'}" data-id="${a.id}">Annuler</button>` : '',
-        !isBarber && a.status === 'completed' ? `<button data-review="${a.id}" data-barber="${a.barber_id}">Laisser un avis</button>` : '',
+        !isBarber && a.status === 'completed' && !a.has_review ? `<button data-review="${a.id}" data-barber="${a.barber_id}">Laisser un avis</button>` : '',
+        canDelete ? `<button class="button-secondary" data-delete-appointment="${a.id}">Supprimer</button>` : '',
       ].filter(Boolean).join('');
       const party = isBarber ? a.client_name : a.shop_name;
       const price = a.price_at_booking != null ? ` · ${Number(a.price_at_booking).toFixed(2)} MAD` : '';
-      return `<article class="appointment"><div><strong>${escapeHtml(party || 'Rendez-vous')}</strong><span class="status-pill">${escapeHtml(a.status)}</span></div><p>${escapeHtml(a.service_name)}${price}</p><p>${formatDate(a.date)} à ${String(a.time).slice(0, 5)}</p>${actions ? `<div class="card-actions">${actions}</div>` : ''}</article>`;
+      const cancellationNote = !isBarber && a.status === 'confirmed' && !a.client_can_cancel
+        ? `<p class="hint">Ce rendez-vous confirmé ne peut plus être annulé à moins de ${escapeHtml(a.cancellation_min_hours)} h du rendez-vous.</p>`
+        : '';
+      return `<article class="appointment"><div><strong>${escapeHtml(party || 'Rendez-vous')}</strong><span class="status-pill">${escapeHtml(a.status)}</span></div><p>${escapeHtml(a.service_name)}${price}</p><p>${formatDate(a.date)} à ${String(a.time).slice(0, 5)}</p>${cancellationNote}${actions ? `<div class="card-actions">${actions}</div>` : ''}</article>`;
     }).join('') : '<p class="hint">Aucun rendez-vous pour le moment.</p>';
   } catch (error) { list.innerHTML = `<p class="form-message is-error">${escapeHtml(error.message)}</p>`; }
 }
@@ -175,6 +182,18 @@ async function loadAppointments() {
 document.addEventListener('click', async (event) => {
   const statusButton = event.target.closest('[data-status]');
   const reviewButton = event.target.closest('[data-review]');
+  const deleteButton = event.target.closest('[data-delete-appointment]');
+  if (deleteButton) {
+    if (!window.confirm('Supprimer définitivement ce rendez-vous passé ?')) return;
+    deleteButton.disabled = true;
+    try {
+      await api(`/appointments/${deleteButton.dataset.deleteAppointment}`, { method: 'DELETE' });
+      await loadAppointments();
+    } catch (error) {
+      deleteButton.disabled = false;
+      window.alert(error.message);
+    }
+  }
   if (statusButton) {
     statusButton.disabled = true;
     try { await api(`/appointments/${statusButton.dataset.id}/status`, { method: 'PUT', body: JSON.stringify({ status: statusButton.dataset.status }) }); await loadAppointments(); }
