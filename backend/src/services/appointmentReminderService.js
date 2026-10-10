@@ -2,6 +2,7 @@ const { pool } = require('../config/database');
 
 const ZONE = 'Africa/Casablanca';
 const INTERVAL_MS = 60 * 1000;
+const suiviRappels = { dernierControle: null, derniereErreurControle: null, dernierEchecEnvoi: null };
 
 function delaiRappelMinutes() {
   const valeur = Number(process.env.APPOINTMENT_REMINDER_MINUTES || 60);
@@ -152,6 +153,7 @@ async function envoyerRappelsDus(whatsapp) {
       await pool.execute("UPDATE notifications SET status = 'sent', sent_at = CURRENT_TIMESTAMP WHERE id = ?", [notificationId]);
       console.log(`Rappel WhatsApp envoyé pour le rendez-vous ${appointment.id}.`);
     } catch (erreur) {
+      suiviRappels.dernierEchecEnvoi = Date.now();
       if (notificationId) await pool.execute("UPDATE notifications SET status = 'failed' WHERE id = ?", [notificationId]).catch(() => {});
       console.error(`Échec du rappel WhatsApp pour le rendez-vous ${appointment.id} :`, erreur.message);
     } finally {
@@ -166,13 +168,34 @@ function demarrerRappelsRendezVous() {
     console.warn('Rappels WhatsApp désactivés : configurez WHATSAPP_ACCESS_TOKEN et WHATSAPP_PHONE_NUMBER_ID.');
     return null;
   }
-  const cycle = () => envoyerRappelsDus(whatsapp).catch((erreur) => {
-    console.error('Impossible de vérifier les rappels WhatsApp :', erreur.message);
-  });
+  const cycle = async () => {
+    try {
+      await envoyerRappelsDus(whatsapp);
+      suiviRappels.dernierControle = Date.now();
+      suiviRappels.derniereErreurControle = null;
+    } catch (erreur) {
+      suiviRappels.dernierControle = Date.now();
+      suiviRappels.derniereErreurControle = Date.now();
+      console.error('Impossible de vérifier les rappels WhatsApp :', erreur.message);
+    }
+  };
   void cycle();
   const timer = setInterval(cycle, INTERVAL_MS);
   timer.unref();
   return timer;
+}
+
+function etatSanteRappels() {
+  const maintenant = Date.now();
+  const configure = Boolean(configurationWhatsApp());
+  const controleRecent = suiviRappels.dernierControle !== null && maintenant - suiviRappels.dernierControle <= 150_000;
+  const erreurRecente = (suiviRappels.derniereErreurControle !== null && maintenant - suiviRappels.derniereErreurControle <= 15 * 60 * 1000)
+    || (suiviRappels.dernierEchecEnvoi !== null && maintenant - suiviRappels.dernierEchecEnvoi <= 15 * 60 * 1000);
+  const ok = configure && controleRecent && !erreurRecente;
+  return {
+    status: ok ? 'ok' : 'degraded',
+    lastCheckAt: suiviRappels.dernierControle ? new Date(suiviRappels.dernierControle).toISOString() : null,
+  };
 }
 
 module.exports = {
@@ -182,4 +205,5 @@ module.exports = {
   instantRendezVous,
   dateLocaleMaroc,
   configurationWhatsApp,
+  etatSanteRappels,
 };

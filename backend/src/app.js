@@ -55,6 +55,12 @@ app.get('/api/ready', async (req, res) => {
   }
 });
 
+app.get('/api/health/reminders', (req, res) => {
+  const { etatSanteRappels } = require('./services/appointmentReminderService');
+  const etat = etatSanteRappels();
+  return res.status(etat.status === 'ok' ? 200 : 503).json(etat);
+});
+
 // L'adresse de contact est publique par nature, contrairement aux identifiants SMTP.
 app.get('/api/public-config', (req, res) => {
   res.status(200).json({ contactEmail: process.env.CONTACT_EMAIL || 'abdellahaithammou06@gmail.com' });
