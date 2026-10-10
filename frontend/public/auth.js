@@ -1,7 +1,15 @@
 const form = document.querySelector('#login-form, #register-form');
 const message = document.querySelector('#auth-message');
 const googleButton = document.querySelector('#google-signin');
+const googleDivider = document.querySelector('.auth-divider');
+const googleHint = document.querySelector('.google-hint');
 const requestedRole = new URLSearchParams(window.location.search).get('role');
+
+function afficherOptionGoogle(visible) {
+  [googleDivider, googleButton, googleHint].forEach((element) => {
+    if (element) element.hidden = !visible;
+  });
+}
 
 if (form?.id === 'register-form' && ['client', 'barber'].includes(requestedRole)) {
   form.elements.role.value = requestedRole;
@@ -66,13 +74,11 @@ form?.addEventListener('submit', async (event) => {
 
 async function initialiserConnexionGoogle() {
   if (!googleButton) return;
+  afficherOptionGoogle(false);
   try {
     const configResponse = await fetch('/auth/google/config');
     const config = await configResponse.json();
-    if (!config.clientId) {
-      message.textContent = 'La connexion Google n’est pas encore configurée.';
-      return;
-    }
+    if (!configResponse.ok || !config.clientId) return;
 
     await new Promise((resolve, reject) => {
       const script = document.createElement('script');
@@ -105,7 +111,9 @@ async function initialiserConnexionGoogle() {
       type: 'standard', shape: 'rectangular', theme: 'outline', size: 'large',
       text: 'continue_with', locale: 'fr', width: 320,
     });
+    afficherOptionGoogle(true);
   } catch {
+    afficherOptionGoogle(false);
     message.textContent = 'Impossible de charger la connexion Google. Réessayez plus tard.';
   }
 }

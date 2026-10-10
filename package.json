@@ -7,7 +7,7 @@
     "dev": "nodemon backend/src/server.js",
     "start": "node backend/src/server.js",
     "db:init": "node backend/scripts/initDatabase.js",
-    "check": "find backend -name '*.js' -print0 | xargs -0 -n1 node --check && node --check frontend/public/app.js",
+    "check": "find backend frontend/public -type f -name '*.js' -print0 | xargs -0 -n1 node --check",
     "test": "npm run check"
   },
   "repository": {
