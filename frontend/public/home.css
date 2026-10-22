@@ -37,6 +37,7 @@ body.home-theme {
 .home-theme .auth-actions .button-secondary:hover { border-color: #c69b5666; background: #c69b5614; }
 
 .home-main { width: min(var(--layout-width), 100%); max-width: var(--layout-width); padding: 0 var(--layout-gutter) 5rem; }
+.home-theme #barber-results { scroll-margin-top: 6.5rem; }
 .home-theme .hero {
   position: relative; isolation: isolate; display: grid; grid-template-columns: minmax(0, 1.12fr) minmax(360px, .88fr);
   align-items: center; gap: clamp(2.5rem, 6vw, 6.5rem); min-height: 680px; overflow: hidden;
